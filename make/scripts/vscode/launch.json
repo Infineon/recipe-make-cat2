@@ -40,6 +40,9 @@
             "configFiles": [
                 "openocd.tcl"
             ],
+            "openOCDPreConfigLaunchCommands": [
+                "set PSOC4_USE_ACQUIRE &&CY_XRES_AVAILABLE&&"
+            ],
             "overrideLaunchCommands": [
                 "set mem inaccessible-by-default off",
                 "-enable-pretty-printing",
@@ -132,6 +135,9 @@
             "configFiles": [
                 "openocd.tcl"
             ],
+            "openOCDPreConfigLaunchCommands": [
+                "set PSOC4_USE_ACQUIRE &&CY_XRES_AVAILABLE&&"
+            ],
             "overrideLaunchCommands": [
                 "monitor reset init",
                 "monitor flash erase_sector 0 0 last",
@@ -154,9 +160,12 @@
             "configFiles": [
                 "openocd.tcl"
             ],
+            "openOCDPreConfigLaunchCommands": [
+                "set PSOC4_USE_ACQUIRE &&CY_XRES_AVAILABLE&&"
+            ],
             "overrideLaunchCommands": [
                 "monitor program {&&CY_HEX_FILE&&}",
-                "monitor reset_config srst_only",
+                "monitor &&CY_RESET_CONFIG&&",
                 "monitor reset run",
                 "monitor psoc4.dap dpreg 0x04 0x00",
                 "quit"
