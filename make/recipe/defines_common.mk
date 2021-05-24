@@ -83,7 +83,7 @@ CY_BSP_DEVICES_CMD=\
 		$(CY_CONFIG_MODUS_EXEC)\
 		$(CY_CONFIG_LIBFILE)\
 		--build $$designFile\
-		--set-device=$(subst $(CY_SPACE),$(CY_COMMA),$(DEVICE_GEN));\
+		--set-device=$(subst $(CY_SPACE),$(CY_COMMA),$(DEVICE_GEN) $(ADDITIONAL_DEVICES));\
 		cfgStatus=$$(echo $$?);\
 		if [ $$cfgStatus != 0 ]; then echo "ERROR: Device-configuration failed for $$designFile"; exit $$cfgStatus; fi;\
 	else\
@@ -138,6 +138,10 @@ endif
 
 CY_C_FLAGS=$(subst $(CY_SPACE),\"$(CY_COMMA)$(CY_NEWLINE_MARKER)\",$(strip $(CY_RECIPE_CFLAGS)))
 
+ifeq ($(CY_ATTACH_SERVER_TYPE),)
+CY_ATTACH_SERVER_TYPE=openocd
+endif
+
 CY_VSCODE_ARGS+="s|&&CY_ELF_FILE&&|$(CY_ELF_FILE)|g;"\
 				"s|&&CY_HEX_FILE&&|$(CY_HEX_FILE)|g;"\
 				"s|&&CY_OPEN_OCD_FILE&&|$(CY_OPENOCD_DEVICE_CFG)|g;"\
@@ -150,7 +154,9 @@ CY_VSCODE_ARGS+="s|&&CY_ELF_FILE&&|$(CY_ELF_FILE)|g;"\
 				"s|&&CY_OPENOCD_SCRIPTS_DIR&&|$(CY_OPENOCD_SCRIPTS_DIR)|g;"\
 				"s|&&CY_CDB_FILE&&|$(CY_CDB_FILE)|g;"\
 				"s|&&CY_CONFIG&&|$(CONFIG)|g;"\
-				"s|&&CY_DEVICE_ATTACH&&|$(CY_JLINK_DEVICE_CFG_ATTACH)|g;"
+				"s|&&CY_DEVICE_ATTACH&&|$(CY_JLINK_DEVICE_CFG_ATTACH)|g;"\
+				"s|&&CY_MODUS_SHELL_BASE&&|$(CY_TOOL_modus-shell_BASE)|g;"\
+				"s|&&CY_ATTACH_SERVER_TYPE&&|$(CY_ATTACH_SERVER_TYPE)|g;"
 
 ifeq ($(CY_USE_CUSTOM_GCC),true)
 CY_VSCODE_ARGS+="s|&&CY_GCC_BIN_DIR&&|$(CY_INTERNAL_TOOL_gcc_BASE)/bin|g;"\

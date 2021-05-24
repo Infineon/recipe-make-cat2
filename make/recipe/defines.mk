@@ -123,72 +123,60 @@ $(call CY_MACRO_ERROR,No SRAM memory size defined for $(DEVICE))
 endif
 
 # Architecture specifics
-ifneq (,$(findstring $(DEVICE),$(CY_DEVICES_WITH_DIE_PSOC4AS1)))
-CY_STARTUP=psoc4000s
-else ifneq (,$(findstring $(DEVICE),$(CY_DEVICES_WITH_DIE_PSOC4AS2)))
-CY_STARTUP=psoc4100s
-else ifneq (,$(findstring $(DEVICE),$(CY_DEVICES_WITH_DIE_PSOC4AS3)))
-CY_STARTUP=psoc4100sp
-else ifneq (,$(findstring $(DEVICE),$(CY_DEVICES_WITH_DIE_PSOC4AMC)))
-CY_STARTUP=psoc4100sp256kb
-else ifneq (,$(findstring $(DEVICE),$(CY_DEVICES_WITH_DIE_PSOC4AS4)))
-CY_STARTUP=psoc4100smax
-else ifneq (,$(findstring $(DEVICE),$(CY_DEVICES_WITH_DIE_CCG3PA)))
-CY_STARTUP=pmg1s0
-else ifneq (,$(findstring $(DEVICE),$(CY_DEVICES_WITH_DIE_CCG6)))
-CY_STARTUP=pmg1s1
-else ifneq (,$(findstring $(DEVICE),$(CY_DEVICES_WITH_DIE_CCG3)))
-CY_STARTUP=pmg1s2
-else ifneq (,$(findstring $(DEVICE),$(CY_DEVICES_WITH_DIE_PMG1S3)))
-CY_STARTUP=pmg1s3
-endif
+CY_MACRO_STARTUP_CALC=$(strip \
+	$(if $(findstring $(1),$(CY_DEVICES_WITH_DIE_PSOC4AS1)),\
+	psoc4000s,\
+	$(if $(findstring $(1),$(CY_DEVICES_WITH_DIE_PSOC4AS2)),\
+	psoc4100s,\
+	$(if $(findstring $(1),$(CY_DEVICES_WITH_DIE_PSOC4AS3)),\
+	psoc4100sp,\
+	$(if $(findstring $(1),$(CY_DEVICES_WITH_DIE_PSOC4AMC)),\
+	psoc4100sp256kb,\
+	$(if $(findstring $(1),$(CY_DEVICES_WITH_DIE_PSOC4AS4)),\
+	psoc4100smax,\
+	$(if $(findstring $(1),$(CY_DEVICES_WITH_DIE_CCG3PA)),\
+	pmg1s0,\
+	$(if $(findstring $(1),$(CY_DEVICES_WITH_DIE_CCG6)),\
+	pmg1s1,\
+	$(if $(findstring $(1),$(CY_DEVICES_WITH_DIE_CCG3)),\
+	pmg1s2,\
+	$(if $(findstring $(1),$(CY_DEVICES_WITH_DIE_PMG1S3)),\
+	pmg1s3,))))))))))
 
 #
 # linker scripts
 #
-ifneq (,$(findstring $(DEVICE),$(CY_DEVICES_WITH_DIE_CCG3PA)))
-CY_LINKER_SCRIPT_NAME=pmg1s0
-else ifneq (,$(findstring $(DEVICE),$(CY_DEVICES_WITH_DIE_CCG6)))
-CY_LINKER_SCRIPT_NAME=pmg1s1
-else ifneq (,$(findstring $(DEVICE),$(CY_DEVICES_WITH_DIE_CCG3)))
-CY_LINKER_SCRIPT_NAME=pmg1s2
-else ifneq (,$(findstring $(DEVICE),$(CY_DEVICES_WITH_DIE_PMG1S3)))
-CY_LINKER_SCRIPT_NAME=pmg1s3
 
-else ifneq (,$(findstring $(DEVICE),$(CY_DEVICES_WITH_FLASH_KB_16)))
-ifneq (,$(findstring $(DEVICE),$(CY_DEVICES_WITH_SRAM_KB_4)))
-CY_LINKER_SCRIPT_NAME=cy8c4xx4
-else ifneq (,$(findstring CY8C47,$(DEVICE))) # PSoC 4700S, 2 KB SRAM
-CY_LINKER_SCRIPT_NAME=cy8c47x4
-else # PSoC 4000S, 2 KB SRAM
-CY_LINKER_SCRIPT_NAME=cy8c40x4
-endif
+CY_MACRO_LINKER_CALC=$(strip \
+	$(if $(findstring $(1),$(CY_DEVICES_WITH_DIE_CCG3PA)),\
+	pmg1s0,\
+	$(if $(findstring $(1),$(CY_DEVICES_WITH_DIE_CCG6)),\
+	pmg1s1,\
+	$(if $(findstring $(1),$(CY_DEVICES_WITH_DIE_CCG3)),\
+	pmg1s2,\
+	$(if $(findstring $(1),$(CY_DEVICES_WITH_DIE_PMG1S3)),\
+	pmg1s3,\
+	$(if $(findstring $(1),$(CY_DEVICES_WITH_FLASH_KB_16)),\
+	$(if $(findstring $(1),$(CY_DEVICES_WITH_SRAM_KB_4)),\
+	cy8c4xx4,\
+	$(if $(findstring CY8C47,$(1)),\
+	cy8c47x4,cy8c40x4)),\
+	$(if $(findstring $(1),$(CY_DEVICES_WITH_FLASH_KB_32)),\
+	cy8c4xx5,\
+	$(if $(findstring $(1),$(CY_DEVICES_WITH_FLASH_KB_64)),\
+	$(if $(findstring $(1),$(CY_DEVICES_WITH_SRAM_KB_8)),\
+	cy8c4xx6,cy8c45x6),\
+	$(if $(findstring $(1),$(CY_DEVICES_WITH_FLASH_KB_128)),\
+	$(if $(findstring $(1),$(CY_DEVICES_WITH_SRAM_KB_16)),\
+	cy8c4xx7,cy8c45x7),\
+	$(if $(findstring $(1),$(CY_DEVICES_WITH_FLASH_KB_256)),\
+	cy8c4xx8,\
+	$(if $(findstring $(1),$(CY_DEVICES_WITH_FLASH_KB_384)),\
+	cy8c4xx9,\
+	)))))))))))
 
-
-else ifneq (,$(findstring $(DEVICE),$(CY_DEVICES_WITH_FLASH_KB_32)))
-CY_LINKER_SCRIPT_NAME=cy8c4xx5
-
-else ifneq (,$(findstring $(DEVICE),$(CY_DEVICES_WITH_FLASH_KB_64)))
-ifneq (,$(findstring $(DEVICE),$(CY_DEVICES_WITH_SRAM_KB_8)))
-CY_LINKER_SCRIPT_NAME=cy8c4xx6
-else # 16 KB SRAM
-CY_LINKER_SCRIPT_NAME=cy8c45x6
-endif
-
-else ifneq (,$(findstring $(DEVICE),$(CY_DEVICES_WITH_FLASH_KB_128)))
-ifneq (,$(findstring $(DEVICE),$(CY_DEVICES_WITH_SRAM_KB_16)))
-CY_LINKER_SCRIPT_NAME=cy8c4xx7
-else # 32 KB SRAM
-CY_LINKER_SCRIPT_NAME=cy8c45x7
-endif
-
-else ifneq (,$(findstring $(DEVICE),$(CY_DEVICES_WITH_FLASH_KB_256)))
-CY_LINKER_SCRIPT_NAME=cy8c4xx8
-
-else ifneq (,$(findstring $(DEVICE),$(CY_DEVICES_WITH_FLASH_KB_384)))
-CY_LINKER_SCRIPT_NAME=cy8c4xx9
-endif
-
+CY_STARTUP=$(call CY_MACRO_STARTUP_CALC,$(DEVICE))
+CY_LINKER_SCRIPT_NAME=$(call CY_MACRO_LINKER_CALC,$(DEVICE))
 ifeq ($(CY_LINKER_SCRIPT_NAME),)
 $(call CY_MACRO_ERROR,Could not resolve device series for linker script)
 endif
@@ -199,69 +187,8 @@ endif
 
 DEVICE_GEN?=$(DEVICE)
 
-# Architecture specifics
-ifneq (,$(findstring $(DEVICE_GEN),$(CY_DEVICES_WITH_DIE_PSOC4AS1)))
-CY_BSP_STARTUP=psoc4000s
-else ifneq (,$(findstring $(DEVICE_GEN),$(CY_DEVICES_WITH_DIE_PSOC4AS2)))
-CY_BSP_STARTUP=psoc4100s
-else ifneq (,$(findstring $(DEVICE_GEN),$(CY_DEVICES_WITH_DIE_PSOC4AS3)))
-CY_BSP_STARTUP=psoc4100sp
-else ifneq (,$(findstring $(DEVICE_GEN),$(CY_DEVICES_WITH_DIE_PSOC4AMC)))
-CY_BSP_STARTUP=psoc4100sp256kb
-else ifneq (,$(findstring $(DEVICE_GEN),$(CY_DEVICES_WITH_DIE_PSOC4AS4)))
-CY_BSP_STARTUP=psoc4100smax
-else ifneq (,$(findstring $(DEVICE_GEN),$(CY_DEVICES_WITH_DIE_CCG3PA)))
-CY_BSP_STARTUP=pmg1s0
-else ifneq (,$(findstring $(DEVICE_GEN),$(CY_DEVICES_WITH_DIE_CCG6)))
-CY_BSP_STARTUP=pmg1s1
-else ifneq (,$(findstring $(DEVICE_GEN),$(CY_DEVICES_WITH_DIE_CCG3)))
-CY_BSP_STARTUP=pmg1s2
-else ifneq (,$(findstring $(DEVICE_GEN),$(CY_DEVICES_WITH_DIE_PMG1S3)))
-CY_BSP_STARTUP=pmg1s3
-endif
-
-# Linker script
-ifneq (,$(findstring $(DEVICE_GEN),$(CY_DEVICES_WITH_DIE_CCG3PA)))
-CY_BSP_LINKER_SCRIPT=pmg1s0
-else ifneq (,$(findstring $(DEVICE_GEN),$(CY_DEVICES_WITH_DIE_CCG6)))
-CY_BSP_LINKER_SCRIPT=pmg1s1
-else ifneq (,$(findstring $(DEVICE_GEN),$(CY_DEVICES_WITH_DIE_CCG3)))
-CY_BSP_LINKER_SCRIPT=pmg1s2
-else ifneq (,$(findstring $(DEVICE_GEN),$(CY_DEVICES_WITH_DIE_PMG1S3)))
-CY_BSP_LINKER_SCRIPT=pmg1s3
-
-else ifneq (,$(findstring $(DEVICE_GEN),$(CY_DEVICES_WITH_FLASH_KB_16)))
-ifneq (,$(findstring $(DEVICE_GEN),$(CY_DEVICES_WITH_SRAM_KB_4)))
-CY_BSP_LINKER_SCRIPT=cy8c4xx4
-else ifneq (,$(findstring CY8C47,$(DEVICE_GEN))) # PSoC 4700S, 2 KB SRAM
-CY_BSP_LINKER_SCRIPT=cy8c47x4
-else # PSoC 4000S, 2 KB SRAM
-CY_BSP_LINKER_SCRIPT=cy8c40x4
-endif
-
-else ifneq (,$(findstring $(DEVICE_GEN),$(CY_DEVICES_WITH_FLASH_KB_32)))
-CY_BSP_LINKER_SCRIPT=cy8c4xx5
-
-else ifneq (,$(findstring $(DEVICE_GEN),$(CY_DEVICES_WITH_FLASH_KB_64)))
-ifneq (,$(findstring $(DEVICE_GEN),$(CY_DEVICES_WITH_SRAM_KB_8)))
-CY_BSP_LINKER_SCRIPT=cy8c4xx6
-else # 16 KB SRAM
-CY_BSP_LINKER_SCRIPT=cy8c45x6
-endif
-
-else ifneq (,$(findstring $(DEVICE_GEN),$(CY_DEVICES_WITH_FLASH_KB_128)))
-ifneq (,$(findstring $(DEVICE_GEN),$(CY_DEVICES_WITH_SRAM_KB_16)))
-CY_BSP_LINKER_SCRIPT=cy8c4xx7
-else # 32 KB SRAM
-CY_BSP_LINKER_SCRIPT=cy8c45x7
-endif
-
-else ifneq (,$(findstring $(DEVICE_GEN),$(CY_DEVICES_WITH_FLASH_KB_256)))
-CY_BSP_LINKER_SCRIPT=cy8c4xx8
-
-else ifneq (,$(findstring $(DEVICE_GEN),$(CY_DEVICES_WITH_FLASH_KB_384)))
-CY_BSP_LINKER_SCRIPT=cy8c4xx9
-endif
+CY_BSP_STARTUP=$(call CY_MACRO_STARTUP_CALC,$(DEVICE_GEN))
+CY_BSP_LINKER_SCRIPT=$(call CY_MACRO_LINKER_CALC,$(DEVICE_GEN))
 
 # Paths
 CY_BSP_TEMPLATES_DIR=$(call CY_MACRO_DIR,$(firstword $(CY_DEVICESUPPORT_SEARCH_PATH)))/devices/COMPONENT_CAT2/templates/COMPONENT_MTB

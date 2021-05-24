@@ -17,6 +17,9 @@ The this release of the PSoC 4 GNU make build recipe includes complete support f
 This also includes the getlibs.bash script that can be used directly, or via the make target to download additional git repo based libraries for the application.
 
 ### What Changed?
+#### v1.1.2
+* Fixed a compatibility bug introduced with make vscode in core-make-1.8.0
+* Added new devices
 #### v1.1.1
 * Fix an issue with make progtool
 #### v1.1.0
