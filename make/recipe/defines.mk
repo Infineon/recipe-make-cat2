@@ -80,6 +80,10 @@ else ifneq (,$(findstring $(DEVICE),$(CY_DEVICES_WITH_DIE_CCG3)))
 CY_PSOC_DIE_NAME=CCG3
 else ifneq (,$(findstring $(DEVICE),$(CY_DEVICES_WITH_DIE_PMG1S3)))
 CY_PSOC_DIE_NAME=PMG1S3
+else ifneq (,$(findstring $(DEVICE),$(CY_DEVICES_WITH_DIE_CCG7D)))
+CY_PSOC_DIE_NAME=CCG7D
+else ifneq (,$(findstring $(DEVICE),$(CY_DEVICES_WITH_DIE_CCG7S)))
+CY_PSOC_DIE_NAME=CCG7S
 else
 $(call CY_MACRO_ERROR,Incorrect part number $(DEVICE). Check DEVICE variable.)
 endif
@@ -141,7 +145,12 @@ CY_MACRO_STARTUP_CALC=$(strip \
 	$(if $(findstring $(1),$(CY_DEVICES_WITH_DIE_CCG3)),\
 	pmg1s2,\
 	$(if $(findstring $(1),$(CY_DEVICES_WITH_DIE_PMG1S3)),\
-	pmg1s3,))))))))))
+	pmg1s3,\
+	$(if $(findstring $(1),$(CY_DEVICES_WITH_DIE_CCG7D)),\
+	ccg7d,\
+	$(if $(findstring $(1),$(CY_DEVICES_WITH_DIE_CCG7S)),\
+	ccg7s,\
+	))))))))))))
 
 #
 # linker scripts
@@ -156,6 +165,10 @@ CY_MACRO_LINKER_CALC=$(strip \
 	pmg1s2,\
 	$(if $(findstring $(1),$(CY_DEVICES_WITH_DIE_PMG1S3)),\
 	pmg1s3,\
+	$(if $(findstring $(1),$(CY_DEVICES_WITH_DIE_CCG7D)),\
+	ccg7d,\
+	$(if $(findstring $(1),$(CY_DEVICES_WITH_DIE_CCG7S)),\
+	ccg7s,\
 	$(if $(findstring $(1),$(CY_DEVICES_WITH_FLASH_KB_16)),\
 	$(if $(findstring $(1),$(CY_DEVICES_WITH_SRAM_KB_4)),\
 	cy8c4xx4,\
@@ -173,13 +186,19 @@ CY_MACRO_LINKER_CALC=$(strip \
 	cy8c4xx8,\
 	$(if $(findstring $(1),$(CY_DEVICES_WITH_FLASH_KB_384)),\
 	cy8c4xx9,\
-	)))))))))))
+	)))))))))))))
 
 CY_STARTUP=$(call CY_MACRO_STARTUP_CALC,$(DEVICE))
 CY_LINKER_SCRIPT_NAME=$(call CY_MACRO_LINKER_CALC,$(DEVICE))
 ifeq ($(CY_LINKER_SCRIPT_NAME),)
 $(call CY_MACRO_ERROR,Could not resolve device series for linker script)
 endif
+
+#
+# QSPI
+#
+CY_QSPI_CMSIS_FLM_FILE_NAME=CY8C4xxx.FLM
+CY_QSPI_IAR_FLM_FILE_NAME=FlashCY8C4xxx.out
 
 ################################################################################
 # BSP generation
@@ -191,9 +210,9 @@ CY_BSP_STARTUP=$(call CY_MACRO_STARTUP_CALC,$(DEVICE_GEN))
 CY_BSP_LINKER_SCRIPT=$(call CY_MACRO_LINKER_CALC,$(DEVICE_GEN))
 
 # Paths
-CY_BSP_TEMPLATES_DIR=$(call CY_MACRO_DIR,$(firstword $(CY_DEVICESUPPORT_SEARCH_PATH)))/devices/COMPONENT_CAT2/templates/COMPONENT_MTB
+CY_BSP_TEMPLATES_DIR=$(CY_CONDITIONAL_DEVICESUPPORT_PATH)/devices/COMPONENT_CAT2/templates/COMPONENT_MTB
 ifeq ($(wildcard $(CY_BSP_TEMPLATES_DIR)),)
-CY_BSP_TEMPLATES_DIR=$(call CY_MACRO_DIR,$(firstword $(CY_DEVICESUPPORT_SEARCH_PATH)))/devices/templates/COMPONENT_MTB
+CY_BSP_TEMPLATES_DIR=$(CY_CONDITIONAL_DEVICESUPPORT_PATH)/devices/templates/COMPONENT_MTB
 endif
 CY_TEMPLATES_DIR=$(CY_BSP_TEMPLATES_DIR)
 CY_BSP_DESTINATION_ABSOLUTE=$(abspath $(CY_TARGET_GEN_DIR))
@@ -204,15 +223,15 @@ endif
 
 # Command for searching files in the template directory
 CY_BSP_SEARCH_FILES_CMD=\
-	-name "system_cat2*" \
-	-o -name "*$(CY_BSP_STARTUP).*" \
-	-o -name "*$(CY_BSP_LINKER_SCRIPT).*"
+	-name system_cat2* \
+	-o -name *$(CY_BSP_STARTUP)\.* \
+	-o -name *$(CY_BSP_LINKER_SCRIPT)\.*
 
 # Command for searching old bsp template files in the template directory to backup
 CY_SEARCH_FILES_CMD=
 # system_cat2* is not in this list because it is same across all cat2 devices.
 ifneq ($(CY_STARTUP),$(CY_BSP_STARTUP))
-CY_SEARCH_FILES_CMD+=-name "*$(CY_STARTUP)*"
+CY_SEARCH_FILES_CMD+=-name *$(CY_STARTUP)\.*
 endif
 
 ifneq ($(CY_LINKER_SCRIPT_NAME),$(CY_BSP_LINKER_SCRIPT))
@@ -220,7 +239,7 @@ ifneq ($(CY_LINKER_SCRIPT_NAME),$(CY_BSP_LINKER_SCRIPT))
 ifneq ($(CY_SEARCH_FILES_CMD),)
 CY_SEARCH_FILES_CMD+=-o
 endif
-CY_SEARCH_FILES_CMD+=-name "*$(CY_LINKER_SCRIPT_NAME)*"
+CY_SEARCH_FILES_CMD+=-name *$(CY_LINKER_SCRIPT_NAME)\.*
 endif
 
 ################################################################################
@@ -229,11 +248,12 @@ endif
 
 # Paths used in program/debug
 ifeq ($(CY_DEVICESUPPORT_PATH),)
-CY_OPENOCD_SVD_PATH?=
+CY_ECLIPSE_OPENOCD_SVD_PATH?=$$\{cy_prj_path\}/$(dir $(firstword $(CY_DEVICESUPPORT_SEARCH_PATH)))devices/svd/$(CY_STARTUP).svd
+CY_VSCODE_OPENOCD_SVD_PATH?=$(dir $(firstword $(CY_DEVICESUPPORT_SEARCH_PATH)))devices/svd/$(CY_STARTUP).svd
 else
-CY_OPENOCD_SVD_PATH?=
+CY_ECLIPSE_OPENOCD_SVD_PATH?=$$\{cy_prj_path\}/$(CY_DEVICESUPPORT_PATH)/devices/svd/$(CY_STARTUP).svd
+CY_VSCODE_OPENOCD_SVD_PATH?=$(CY_DEVICESUPPORT_PATH)/devices/svd/$(CY_STARTUP).svd
 endif
-
 
 ################################################################################
 # IDE specifics
@@ -256,15 +276,27 @@ endif
 
 CY_IAR_DEVICE_NAME=$(DEVICE)
 
-# The architecture name is needed for the CPRJ and CPDSC
 CY_CMSIS_ARCH_NAME=PSoC4_DFP
+CY_CMSIS_VENDOR_NAME=Cypress
+CY_CMSIS_VENDOR_ID=19
+CY_CMSIS_SPECIFY_CORE=1
 
 ################################################################################
 # Tools specifics
 ################################################################################
 
+modus_DEFAULT_TYPE+=device-configurator
+
+# Check if device supports SmartIO
+ifneq (,$(findstring $(DEVICE),$(CY_DEVICES_WITH_DIE_PSOC4AS1)\
+								$(CY_DEVICES_WITH_DIE_PSOC4AS2)\
+								$(CY_DEVICES_WITH_DIE_PSOC4AS3)\
+								$(CY_DEVICES_WITH_DIE_PSOC4AS4)\
+								$(CY_DEVICES_WITH_DIE_PSOC4AMC)))
+CY_SUPPORTED_TOOL_TYPES+=smartio-configurator
 # PSoC 4 smartio also uses the .modus extension
-modus_DEFAULT_TYPE+=device-configurator smartio-configurator
+modus_DEFAULT_TYPE+=smartio-configurator
+endif
 
 # PSoC 4 capsense-tuner shares its existence with capsense-configurator
 CY_OPEN_NEWCFG_XML_TYPES+=capsense-tuner
@@ -272,8 +304,7 @@ CY_OPEN_NEWCFG_XML_TYPES+=capsense-tuner
 CY_SUPPORTED_TOOL_TYPES+=\
 	device-configurator\
 	seglcd-configurator\
-	smartio-configurator\
-	dfuh-tool \
+	dfuh-tool\
 	lin-configurator
 	
 ifneq (,$(findstring $(DEVICE),$(CY_DEVICES_WITH_USBPD)))

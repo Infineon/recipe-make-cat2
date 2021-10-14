@@ -7,7 +7,7 @@
 #
 ################################################################################
 # \copyright
-# Copyright 2018-2020 Cypress Semiconductor Corporation
+# Copyright 2018-2021 Cypress Semiconductor Corporation
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -33,7 +33,8 @@ include $(CY_INTERNAL_BASELIB_PATH)/make/recipe/recipe_common.mk
 # linker script construction
 #
 ifeq ($(LINKER_SCRIPT),)
-LINKER_SCRIPT=$(CY_TARGET_DIR)/TOOLCHAIN_$(TOOLCHAIN)/$(CY_LINKER_SCRIPT_NAME).$(CY_TOOLCHAIN_SUFFIX_LS)
+# Remove quotes from path and escape spaces. Spaces can already be escaped.
+LINKER_SCRIPT=$(call CY_MACRO_GET_PATH_W_ESCAPED_SPACES,$(CY_TARGET_DIR)/TOOLCHAIN_$(TOOLCHAIN)/$(CY_LINKER_SCRIPT_NAME).$(CY_TOOLCHAIN_SUFFIX_LS))
 endif
 
 
@@ -44,7 +45,8 @@ endif
 ifeq ($(TOOLCHAIN),A_Clang)
 include $(LINKER_SCRIPT)
 else
-CY_RECIPE_LSFLAG=$(CY_TOOLCHAIN_LSFLAGS)$(LINKER_SCRIPT)
+# Quote linker script path and remove escape from spaces
+CY_RECIPE_LSFLAG=$(CY_TOOLCHAIN_LSFLAGS)"$(call CY_MACRO_GET_RAW_PATH,$(LINKER_SCRIPT))"
 endif
 
 # Aclang arguments must match the symbols in the PDL makefile
