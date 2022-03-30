@@ -150,7 +150,11 @@ CY_MACRO_STARTUP_CALC=$(strip \
 	ccg7d,\
 	$(if $(findstring $(1),$(CY_DEVICES_WITH_DIE_CCG7S)),\
 	ccg7s,\
-	))))))))))))
+	$(if $(findstring $(1),$(CY_DEVICES_WITH_DIE_PAG2S)),\
+	pag2s,\
+	$(if $(findstring $(1),$(CY_DEVICES_WITH_DIE_PSOC4ASF2)),\
+	psoc4000t,\
+	))))))))))))))
 
 #
 # linker scripts
@@ -169,6 +173,11 @@ CY_MACRO_LINKER_CALC=$(strip \
 	ccg7d,\
 	$(if $(findstring $(1),$(CY_DEVICES_WITH_DIE_CCG7S)),\
 	ccg7s,\
+	$(if $(findstring $(1),$(CY_DEVICES_WITH_DIE_PAG2S)),\
+	pag2s,\
+	$(if $(findstring $(1),$(CY_DEVICES_WITH_DIE_PSOC4ASF2)),\
+	$(if $(findstring $(1),$(CY_DEVICES_WITH_FLASH_KB_32)),\
+	cy8c4xx5,cy8c4xx6),\
 	$(if $(findstring $(1),$(CY_DEVICES_WITH_FLASH_KB_16)),\
 	$(if $(findstring $(1),$(CY_DEVICES_WITH_SRAM_KB_4)),\
 	cy8c4xx4,\
@@ -186,7 +195,7 @@ CY_MACRO_LINKER_CALC=$(strip \
 	cy8c4xx8,\
 	$(if $(findstring $(1),$(CY_DEVICES_WITH_FLASH_KB_384)),\
 	cy8c4xx9,\
-	)))))))))))))
+	)))))))))))))))
 
 CY_STARTUP=$(call CY_MACRO_STARTUP_CALC,$(DEVICE))
 CY_LINKER_SCRIPT_NAME=$(call CY_MACRO_LINKER_CALC,$(DEVICE))
@@ -292,7 +301,8 @@ ifneq (,$(findstring $(DEVICE),$(CY_DEVICES_WITH_DIE_PSOC4AS1)\
 								$(CY_DEVICES_WITH_DIE_PSOC4AS2)\
 								$(CY_DEVICES_WITH_DIE_PSOC4AS3)\
 								$(CY_DEVICES_WITH_DIE_PSOC4AS4)\
-								$(CY_DEVICES_WITH_DIE_PSOC4AMC)))
+								$(CY_DEVICES_WITH_DIE_PSOC4AMC)\
+								$(CY_DEVICES_WITH_DIE_PSOC4ASF2)))
 CY_SUPPORTED_TOOL_TYPES+=smartio-configurator
 # PSoC 4 smartio also uses the .modus extension
 modus_DEFAULT_TYPE+=smartio-configurator
@@ -304,9 +314,14 @@ CY_OPEN_NEWCFG_XML_TYPES+=capsense-tuner
 CY_SUPPORTED_TOOL_TYPES+=\
 	device-configurator\
 	seglcd-configurator\
-	dfuh-tool\
-	lin-configurator
-	
+	dfuh-tool
+
+# CCG7D does not support lin configurator.
+ifeq (,$(findstring $(DEVICE),$(CY_DEVICES_WITH_DIE_CCG7D)))
+CY_SUPPORTED_TOOL_TYPES+=lin-configurator
+endif
+
+
 ifneq (,$(findstring $(DEVICE),$(CY_DEVICES_WITH_USBPD)))
 CY_SUPPORTED_TOOL_TYPES+=ez-pd-configurator
 endif

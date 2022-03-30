@@ -17,6 +17,8 @@ The this release of the PSoC 4 GNU make build recipe includes complete support f
 This also includes the getlibs.bash script that can be used directly, or via the make target to download additional git repo based libraries for the application.
 
 ### What Changed?
+#### v1.2.1
+* Added WLC1 devices
 #### v1.2.0
 * Added CCG7D and CCG7S devices
 #### v1.1.2
@@ -42,7 +44,7 @@ This version of the PSoC 4 build system was validated for compatibility with the
 
 | Software and Tools                        | Version |
 | :---                                      | :----:  |
-| ModusToolbox Software Environment         | 2.3     |
+| ModusToolbox Software Environment         | 2.4     |
 | GCC Compiler                              | 9.2     |
 | IAR Compiler                              | 8.4     |
 | ARM Compiler                              | 6.11    |
