@@ -60,7 +60,7 @@ CY_RECIPE_ACLANG_POSTBUILD=\
 # Programmer tool
 ################################################################################
 
-CY_PROGTOOL_FW_LOADER=$(CY_INTERNAL_TOOL_fw-loader_EXE)
+CY_PROGTOOL_FW_LOADER=$(CY_TOOL_fw-loader_EXE)
 progtool:
 	$(CY_NOISE)echo;\
 	echo ==============================================================================;\

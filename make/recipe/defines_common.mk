@@ -40,11 +40,11 @@ CY_BACK_OLD_BSP_TEMPLATES_CMD=$(CY_BASH) $(CY_INTERNAL_BASELIB_PATH)/make/script
 CY_BSP_TEMPLATES_CMD=$(CY_BASH) $(CY_INTERNAL_BASELIB_PATH)/make/scripts/copy_bsp_template.bash "$(CY_FIND)" "$(CY_BSP_TEMPLATES_DIR)" "$(CY_BSP_DESTINATION_ABSOLUTE)" "$(CY_BSP_SEARCH_FILES_CMD)" "$(CY_BSP_LINKER_SCRIPT)" "$(CY_BSP_STARTUP)" "$(CY_INTERNAL_BSP_TARGET_CREATE_BACK_UP)";
 
 # Command for updating the device(s) (Note: this doesn't get expanded and used until "bsp" target)
-CY_BSP_DEVICES_CMD=$(CY_BASH) $(CY_INTERNAL_BASELIB_PATH)/make/scripts/run_bsp_device_configurator.bash "$(CY_FIND)" "$(CY_TARGET_GEN_DIR)" "$(DEVICE_GEN)" "$(ADDITIONAL_DEVICES)" "$(CY_CONFIG_MODUS_EXEC)" "$(CY_CONFIG_LIBFILE)";
+CY_BSP_DEVICES_CMD=$(CY_BASH) $(CY_INTERNAL_BASELIB_PATH)/make/scripts/run_bsp_device_configurator.bash "$(CY_FIND)" "$(CY_TARGET_GEN_DIR)" "$(DEVICE_GEN)" "$(ADDITIONAL_DEVICES)" "$(CY_TOOL_device-configurator-cli_EXE)";
 
 ifneq ($(CY_QSPI_FLM_DIR),)
 CY_BSP_UPDATE_FLASH_LOADER_CMD=$(if $(wildcard $(CY_OPEN_qspi_configurator_OUTPUT_DIR)/*.$(CY_OPEN_qspi_configurator_EXT)),\
-	$(CY_INTERNAL_TOOLS)/$(CY_TOOL_qspi-configurator-cli_EXE) --config $(wildcard $(CY_OPEN_qspi_configurator_OUTPUT_DIR)/*.$(CY_OPEN_qspi_configurator_EXT)) --flashloader-dir $(CY_QSPI_FLM_DIR),);
+	$(CY_TOOL_qspi-configurator-cli_EXE) --config $(wildcard $(CY_OPEN_qspi_configurator_OUTPUT_DIR)/*.$(CY_OPEN_qspi_configurator_EXT)) --flashloader-dir $(CY_QSPI_FLM_DIR),);
 else
 CY_BSP_UPDATE_FLASH_LOADER_CMD=
 endif
@@ -58,8 +58,8 @@ ifneq ($(CY_BUILD_LOCATION),)
 CY_SYM_FILE?=$(CY_INTERNAL_BUILD_LOC)/$(TARGET)/$(CONFIG)/$(APPNAME).$(CY_TOOLCHAIN_SUFFIX_TARGET)
 CY_PROG_FILE?=$(CY_INTERNAL_BUILD_LOC)/$(TARGET)/$(CONFIG)/$(APPNAME).$(CY_TOOLCHAIN_SUFFIX_PROGRAM)
 else
-CY_SYM_FILE?=\$$\{cy_prj_path\}/$(notdir $(CY_INTERNAL_BUILD_LOC))/$(TARGET)/$(CONFIG)/$(APPNAME).$(CY_TOOLCHAIN_SUFFIX_TARGET)
-CY_PROG_FILE?=\$$\{cy_prj_path\}/$(notdir $(CY_INTERNAL_BUILD_LOC))/$(TARGET)/$(CONFIG)/$(APPNAME).$(CY_TOOLCHAIN_SUFFIX_PROGRAM)
+CY_SYM_FILE?=\$${cy_prj_path}/$(notdir $(CY_INTERNAL_BUILD_LOC))/$(TARGET)/$(CONFIG)/$(APPNAME).$(CY_TOOLCHAIN_SUFFIX_TARGET)
+CY_PROG_FILE?=\$${cy_prj_path}/$(notdir $(CY_INTERNAL_BUILD_LOC))/$(TARGET)/$(CONFIG)/$(APPNAME).$(CY_TOOLCHAIN_SUFFIX_PROGRAM)
 endif
 
 # Search for device support path only when CY_DEVICESUPPORT_PATH is not defined otherwise use CY_INTERNAL_DEVICESUPPORT_PATH
@@ -76,22 +76,23 @@ endif
 
 # Eclipse
 ifeq ($(filter eclipse,$(MAKECMDGOALS)),eclipse)
-CY_ECLIPSE_ARGS+="s|&&CY_OPENOCD_CFG&&|$(CY_OPENOCD_DEVICE_CFG)|g;"\
-				"s|&&CY_OPENOCD_CHIP&&|$(CY_OPENOCD_CHIP_NAME)|g;"\
-				"s|&&CY_APPNAME&&|$(CY_IDE_PRJNAME)|;"\
-				"s|&&CY_CONFIG&&|$(CONFIG)|;"\
-				"s|&&CY_SVD_PATH&&|$(CY_ECLIPSE_OPENOCD_SVD_PATH)|g;"\
-				"s|&&CY_SYM_FILE&&|$(CY_SYM_FILE)|;"\
-				"s|&&CY_PROG_FILE&&|$(CY_PROG_FILE)|;"\
-				"s|&&CY_ECLIPSE_GDB&&|$(CY_ECLIPSE_GDB)|g;"
+MTB_ECLIPSE_TEXT_FILE_CMD+=echo "&&CY_OPENOCD_CFG&&=$(CY_OPENOCD_DEVICE_CFG)" >> $(MTB_CORE_MAKE_ECLIPSE_TEXTDATA_FILE);\
+				echo "&&CY_OPENOCD_CHIP&&=$(CY_OPENOCD_CHIP_NAME)" >> $(MTB_CORE_MAKE_ECLIPSE_TEXTDATA_FILE);\
+				echo "&&CY_APPNAME&&=$(CY_IDE_PRJNAME)" >> $(MTB_CORE_MAKE_ECLIPSE_TEXTDATA_FILE);\
+				echo "&&CY_CONFIG&&=$(CONFIG)" >> $(MTB_CORE_MAKE_ECLIPSE_TEXTDATA_FILE);\
+				echo "&&CY_SVD_PATH&&=$(CY_ECLIPSE_OPENOCD_SVD_PATH)" >> $(MTB_CORE_MAKE_ECLIPSE_TEXTDATA_FILE);\
+				echo "&&CY_SYM_FILE&&=$(CY_SYM_FILE)" >> $(MTB_CORE_MAKE_ECLIPSE_TEXTDATA_FILE);\
+				echo "&&CY_PROG_FILE&&=$(CY_PROG_FILE)" >> $(MTB_CORE_MAKE_ECLIPSE_TEXTDATA_FILE);\
+				echo "&&CY_ECLIPSE_GDB&&=$(CY_ECLIPSE_GDB)" >> $(MTB_CORE_MAKE_ECLIPSE_TEXTDATA_FILE);\
+				echo "&&MTB_APPLICATION_NAME&&=$(_MTB_ECLIPSE_APPLICATION_NAME)" >> $(MTB_CORE_MAKE_ECLIPSE_TEXTDATA_FILE);
 endif
 
 # VSCode
 ifeq ($(filter vscode,$(MAKECMDGOALS)),vscode)
 CY_GCC_BASE_DIR=$(subst $(CY_INTERNAL_TOOLS)/,,$(CY_INTERNAL_TOOL_gcc_BASE))
-CY_GCC_VERSION=$(shell $(CY_INTERNAL_TOOL_arm-none-eabi-gcc_EXE) -dumpversion)
-CY_OPENOCD_EXE_DIR=$(patsubst $(CY_INTERNAL_TOOLS)/%,%,$(CY_INTERNAL_TOOL_openocd_EXE))
-CY_OPENOCD_SCRIPTS_DIR=$(patsubst $(CY_INTERNAL_TOOLS)/%,%,$(CY_INTERNAL_TOOL_openocd_scripts_SCRIPT))
+CY_GCC_VERSION=$(shell $(CY_TOOL_arm-none-eabi-gcc_EXE) -dumpversion)
+CY_OPENOCD_EXE_DIR=$(patsubst $(CY_INTERNAL_TOOLS)/%,%,$(CY_TOOL_openocd_EXE))
+CY_OPENOCD_SCRIPTS_DIR=$(patsubst $(CY_INTERNAL_TOOLS)/%,%,$(CY_TOOL_openocd_scripts_SCRIPT))
 
 ifneq ($(CY_BUILD_LOCATION),)
 CY_ELF_FILE?=$(CY_INTERNAL_BUILD_LOC)/$(TARGET)/$(CONFIG)/$(APPNAME).$(CY_TOOLCHAIN_SUFFIX_TARGET)
@@ -107,6 +108,8 @@ ifeq ($(CY_ATTACH_SERVER_TYPE),)
 CY_ATTACH_SERVER_TYPE=openocd
 endif
 
+_MTB_VSCODE_MODUS_SHELL_RELATIVE=$(subst $(CY_INTERNAL_TOOLS),,$(CY_TOOL_modus-shell_BASE))
+
 CY_VSCODE_ARGS+="s|&&CY_ELF_FILE&&|$(CY_ELF_FILE)|g;"\
 				"s|&&CY_HEX_FILE&&|$(CY_HEX_FILE)|g;"\
 				"s|&&CY_OPEN_OCD_FILE&&|$(CY_OPENOCD_DEVICE_CFG)|g;"\
@@ -120,7 +123,7 @@ CY_VSCODE_ARGS+="s|&&CY_ELF_FILE&&|$(CY_ELF_FILE)|g;"\
 				"s|&&CY_CDB_FILE&&|$(CY_CDB_FILE)|g;"\
 				"s|&&CY_CONFIG&&|$(CONFIG)|g;"\
 				"s|&&CY_DEVICE_ATTACH&&|$(CY_JLINK_DEVICE_CFG_ATTACH)|g;"\
-				"s|&&CY_MODUS_SHELL_BASE&&|$(CY_TOOL_modus-shell_BASE)|g;"\
+				"s|&&CY_MODUS_SHELL_BASE&&|$(_MTB_VSCODE_MODUS_SHELL_RELATIVE)|g;"\
 				"s|&&CY_ATTACH_SERVER_TYPE&&|$(CY_ATTACH_SERVER_TYPE)|g;"
 
 ifeq ($(CY_USE_CUSTOM_GCC),true)

@@ -30,11 +30,11 @@
             "name": "Launch PSoC4 CM0 (KitProg3_MiniProg4)",
             "type": "cortex-debug",
             "request": "launch",
-            "cwd": "${workspaceRoot}",
+            "cwd": "${workspaceFolder}",
             "executable": "&&CY_ELF_FILE&&",
             "servertype": "openocd",
             "searchDir": [
-                "${workspaceRoot}",
+                "${workspaceFolder}",
                 "${config:modustoolbox.toolsPath}/&&CY_OPENOCD_SCRIPTS_DIR&&/"
             ],
             "configFiles": [
@@ -49,8 +49,7 @@
                 "monitor reset init",
                 // Comment this next line out if you don't want to reload program
                 "monitor program {&&CY_HEX_FILE&&}",
-                "monitor reset run",
-                "monitor sleep 200",
+                "starti",
                 "monitor psoc4 reset_halt"
             ],
             "postStartSessionCommands": [       // Needed if runToMain is false
@@ -64,9 +63,7 @@
                 "stepi"
             ],
             "overrideRestartCommands": [
-                "monitor reset init",
-                "monitor reset run",
-                "monitor sleep 200",
+                "starti",
                 "monitor psoc4 reset_halt"
             ],
             "postRestartSessionCommands": [
@@ -76,11 +73,11 @@
             // svdFile is optional, it can be very large.
             "svdFile": "&&CY_SVD_FILE_NAME&&",
             "breakAfterReset": true,
-            "runToMain": true,          // if true, program will halt at main. Not used for a restart
+            "runToEntryPoint": "main",    // Specifies application entry point name where program will halt
             "preLaunchTask": "Build: Build [&&CY_CONFIG&&]",    // Set this to run a task from tasks.json
                                                         // before starting a debug session
-            "showDevDebugOutput": false // When set to true, displays output of GDB.
-                                        // This is helpful when something is not working right
+            "showDevDebugOutput": "none"  // When set to true, displays output of GDB.
+                                          // This is helpful when something is not working right
         },
         // When using 'attach', make sure your program is running on the board and that your
         // executable matches the image in the chip exactly, or else strange things can happen
@@ -89,11 +86,11 @@
             "name": "Attach PSoC4 CM0 (KitProg3_MiniProg4)",
             "type": "cortex-debug",
             "request": "attach",
-            "cwd": "${workspaceRoot}",
+            "cwd": "${workspaceFolder}",
             "executable": "&&CY_ELF_FILE&&",
             "servertype": "&&CY_ATTACH_SERVER_TYPE&&",
             "searchDir": [
-                "${workspaceRoot}",
+                "${workspaceFolder}",
                 "${config:modustoolbox.toolsPath}/&&CY_OPENOCD_SCRIPTS_DIR&&/"
             ],
             "openOCDPreConfigLaunchCommands": [
@@ -108,9 +105,7 @@
                 "monitor halt"
             ],
             "overrideRestartCommands": [
-                "monitor reset init",
-                "monitor reset run",
-                "monitor sleep 200",
+                "starti",
                 "monitor psoc4 reset_halt"
             ],
             "postRestartSessionCommands": [
@@ -120,18 +115,19 @@
             // svdFile is optional, it can be very large.
             "svdFile": "&&CY_SVD_FILE_NAME&&",
             "breakAfterReset": true,
-            "showDevDebugOutput": false // When set to true, displays output of GDB.
-                                        // This is helpful when something is not working right
+            "runToEntryPoint": "main",    // Specifies application entry point name for restart/reset
+            "showDevDebugOutput": "none"  // When set to true, displays output of GDB.
+                                          // This is helpful when something is not working right
         },
         {
             "name": "Erase (KitProg3_MiniProg4)",
             "type": "cortex-debug",
             "request": "launch",
-            "cwd": "${workspaceRoot}",
+            "cwd": "${workspaceFolder}",
             "executable": "&&CY_HEX_FILE&&",
             "servertype": "openocd",
             "searchDir": [
-                "${workspaceRoot}",
+                "${workspaceFolder}",
                 "${config:modustoolbox.toolsPath}/&&CY_OPENOCD_SCRIPTS_DIR&&/"
             ],
             "configFiles": [
@@ -145,18 +141,18 @@
                 "monitor flash erase_sector 0 0 last",
                 "quit"
             ],
-            "showDevDebugOutput": false // When set to true, displays output of GDB.
-                                        // This is helpful when something is not working right
+            "showDevDebugOutput": "none"  // When set to true, displays output of GDB.
+                                          // This is helpful when something is not working right
         },
         {
             "name": "Program (KitProg3_MiniProg4)",
             "type": "cortex-debug",
             "request": "launch",
-            "cwd": "${workspaceRoot}",
+            "cwd": "${workspaceFolder}",
             "executable": "&&CY_HEX_FILE&&",
             "servertype": "openocd",
             "searchDir": [
-                "${workspaceRoot}",
+                "${workspaceFolder}",
                 "${config:modustoolbox.toolsPath}/&&CY_OPENOCD_SCRIPTS_DIR&&/"
             ],
             "configFiles": [
@@ -174,14 +170,14 @@
             ],
             "preLaunchTask": "Build: Build [&&CY_CONFIG&&]",    // Set this to run a task from tasks.json
                                                         // before device programming
-            "showDevDebugOutput": false // When set to true, displays output of GDB.
-                                        // This is helpful when something is not working right
+            "showDevDebugOutput": "none"  // When set to true, displays output of GDB.
+                                          // This is helpful when something is not working right
         },
         {
             "name": "Launch PSoC4 CM0 (JLink)",
             "type": "cortex-debug",
             "request": "launch",
-            "cwd": "${workspaceRoot}",
+            "cwd": "${workspaceFolder}",
             "executable": "&&CY_ELF_FILE&&",
             "servertype": "jlink",
             "device": "&&DEVICE&&",
@@ -189,15 +185,17 @@
                 // Program via the hex file to get complete coverage
                 "exec-file &&CY_HEX_FILE&&"
             ],
-            "demangle": true,
+            "overrideRestartCommands": [
+                "starti"
+            ],
             // svdFile is optional, it can be very large.
             "svdFile": "&&CY_SVD_FILE_NAME&&",
             "breakAfterReset": true,
-            "runToMain": true,          // if true, program will halt at main. Not used for a restart
+            "runToEntryPoint": "main",    // Specifies application entry point name where program will halt
             "preLaunchTask": "Build: Build [&&CY_CONFIG&&]", // Set this to run a task from tasks.json before
                                                      // starting a debug session
-            "showDevDebugOutput": false // When set to true, displays output of GDB.
-                                        // This is helpful when something is not working right
+            "showDevDebugOutput": "none"  // When set to true, displays output of GDB.
+                                          // This is helpful when something is not working right
         },
         // When using 'attach', make sure your program is running on the board and that your
         // executable matches the image in the chip exactly, or else strange things can happen
@@ -206,22 +204,22 @@
             "name": "Attach PSoC4 CM0 (JLink)",
             "type": "cortex-debug",
             "request": "attach",
-            "cwd": "${workspaceRoot}",
+            "cwd": "${workspaceFolder}",
             "executable": "&&CY_ELF_FILE&&",
             "servertype": "jlink",
             "device": "&&CY_DEVICE_ATTACH&&",
-            "demangle": true,
             // svdFile is optional, it can be very large.
             "svdFile": "&&CY_SVD_FILE_NAME&&",
             "breakAfterReset": true,
-            "showDevDebugOutput": false // When set to true, displays output of GDB.
-                                        // This is helpful when something is not working right
+            "runToEntryPoint": "main",    // Specifies application entry point name for restart/reset
+            "showDevDebugOutput": "none"  // When set to true, displays output of GDB.
+                                          // This is helpful when something is not working right
         },
         {
             "name": "Erase (JLink)",
             "type": "cortex-debug",
             "request": "launch",
-            "cwd": "${workspaceRoot}",
+            "cwd": "${workspaceFolder}",
             // executable not needed but need some valid file to get the session to start
             "executable": "&&CY_HEX_FILE&&",
             "servertype": "jlink",
@@ -232,14 +230,14 @@
                 "monitor reset 0",      // Reset both core and the peripherals
                 "quit"
             ],
-            "showDevDebugOutput": false // When set to true, displays output of GDB.
-                                        // This is helpful when something is not working right
+            "showDevDebugOutput": "none"  // When set to true, displays output of GDB.
+                                          // This is helpful when something is not working right
         },
         {
             "name": "Program (JLink)",
             "type": "cortex-debug",
             "request": "launch",
-            "cwd": "${workspaceRoot}",
+            "cwd": "${workspaceFolder}",
             // Program via the hex file to get complete coverage, no need for symbols
             "executable": "&&CY_HEX_FILE&&",
             "servertype": "jlink",
@@ -253,8 +251,8 @@
             ],
             "preLaunchTask": "Build: Build [&&CY_CONFIG&&]",    // Set this to run a task from tasks.json
                                                         // before device programming
-            "showDevDebugOutput": false // When set to true, displays output of GDB.
-                                        // This is helpful when something is not working right
+            "showDevDebugOutput": "none"  // When set to true, displays output of GDB.
+                                          // This is helpful when something is not working right
         }
     ]
 }

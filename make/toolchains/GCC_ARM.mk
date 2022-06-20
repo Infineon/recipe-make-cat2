@@ -103,33 +103,86 @@ CY_TOOLCHAIN_NEWLIBNANO=--specs=nano.specs
 # CPU core specifics
 #
 ifeq ($(CORE),CM0)
+# Arm Cortex-M0 CPU
 CY_TOOLCHAIN_FLAGS_CORE=-mcpu=cortex-m0 $(CY_TOOLCHAIN_NEWLIBNANO)
 CY_TOOLCHAIN_VFP_FLAGS=
-else ifeq ($(CORE),CM0P)
+endif
+
+ifeq ($(CORE),CM0P)
+# Arm Cortex-M0+ CPU
 CY_TOOLCHAIN_FLAGS_CORE=-mcpu=cortex-m0plus $(CY_TOOLCHAIN_NEWLIBNANO)
 CY_TOOLCHAIN_VFP_FLAGS=
-else ifeq ($(CORE),CM4)
+endif
+
+ifeq ($(CORE),CM4)
+# Arm Cortex-M4 CPU
 CY_TOOLCHAIN_FLAGS_CORE=-mcpu=cortex-m4 $(CY_TOOLCHAIN_NEWLIBNANO)
 ifeq ($(VFP_SELECT),hardfp)
+# FPv4 FPU, hardfp, single-precision
 CY_TOOLCHAIN_VFP_FLAGS=-mfloat-abi=hard -mfpu=fpv4-sp-d16
 else ifeq ($(VFP_SELECT),softfloat)
+# Software FP
 CY_TOOLCHAIN_VFP_FLAGS=
 else
+# FPv4 FPU, softfp, single-precision
 CY_TOOLCHAIN_VFP_FLAGS=-mfloat-abi=softfp -mfpu=fpv4-sp-d16
 endif
-else ifeq ($(CORE),CM33)
-ifeq ($(DSPEXT),no)
-CY_TOOLCHAIN_FLAGS_CORE=-mcpu=cortex-m33+nodsp $(CY_TOOLCHAIN_NEWLIBNANO)
-else
-CY_TOOLCHAIN_FLAGS_CORE=-mcpu=cortex-m33 $(CY_TOOLCHAIN_NEWLIBNANO)
 endif
+
+ifeq ($(CORE),CM7)
+# Arm Cortex-M7 CPU
+CY_TOOLCHAIN_FLAGS_CORE=-mcpu=cortex-m7 $(CY_TOOLCHAIN_NEWLIBNANO)
 ifeq ($(VFP_SELECT),hardfp)
+ifeq ($(VFP_SELECT_PRECISION),singlefp)
+# FPv5 FPU, hardfp, single-precision
 CY_TOOLCHAIN_VFP_FLAGS=-mfloat-abi=hard -mfpu=fpv5-sp-d16
+else
+# FPv5 FPU, hardfp, double-precision
+CY_TOOLCHAIN_VFP_FLAGS=-mfloat-abi=hard -mfpu=fpv5-d16
+endif
 else ifeq ($(VFP_SELECT),softfloat)
+# Software FP
 CY_TOOLCHAIN_VFP_FLAGS=
 else
+ifeq ($(VFP_SELECT_PRECISION),singlefp)
+# FPv5 FPU, softfp, single-precision
+CY_TOOLCHAIN_VFP_FLAGS=-mfloat-abi=softfp -mfpu=fpv5-sp-d16
+else
+# FPv5 FPU, softfp, double-precision
+CY_TOOLCHAIN_VFP_FLAGS=-mfloat-abi=softfp -mfpu=fpv5-d16
+endif
+endif
+endif
+
+ifeq ($(CORE),CM33)
+ifeq (,$(findstring $(DEVICE),$(CY_DEVICES_WITH_DSP)))
+# Arm Cortex-M33 CPU
+CY_TOOLCHAIN_FLAGS_CORE=-mcpu=cortex-m33+nodsp $(CY_TOOLCHAIN_NEWLIBNANO)
+else
+# Arm Cortex-M33 CPU with DSP extension
+CY_TOOLCHAIN_FLAGS_CORE=-mcpu=cortex-m33 $(CY_TOOLCHAIN_NEWLIBNANO)
+endif
+# See make help for VFP_SELECT
+ifeq (,$(findstring $(DEVICE),$(CY_DEVICES_WITH_FPU)))
+ifeq ($(VFP_SELECT),hardfp)
+# FPv5 FPU, hardfp, single precision
+CY_TOOLCHAIN_VFP_FLAGS=-mfloat-abi=hard -mfpu=fpv5-sp-d16
+else ifeq ($(VFP_SELECT),softfloat)
+# Software FP
+CY_TOOLCHAIN_VFP_FLAGS=
+else
+# FPv5 FPU, softfp, single precision
 CY_TOOLCHAIN_VFP_FLAGS=-mfloat-abi=softfp -mfpu=fpv5-sp-d16
 endif
+else
+CY_TOOLCHAIN_VFP_FLAGS=
+endif
+endif
+
+ifeq ($(CORE),CM55)
+# Arm Cortex-M55 CPU
+CY_TOOLCHAIN_FLAGS_CORE=-mcpu=cortex-m55 $(CY_TOOLCHAIN_NEWLIBNANO)
+CY_TOOLCHAIN_VFP_FLAGS=
 endif
 
 #

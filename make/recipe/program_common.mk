@@ -27,8 +27,8 @@ $(info Processing $(lastword $(MAKEFILE_LIST)))
 endif
 
 CY_GDB_CLIENT=$(CY_INTERNAL_TOOL_arm-none-eabi-gdb_EXE)
-CY_OPENOCD_EXE=$(CY_INTERNAL_TOOL_openocd_EXE)
-CY_OPENOCD_SCRIPTS=-s $(CY_INTERNAL_TOOL_openocd_scripts_SCRIPT)
+CY_OPENOCD_EXE=$(CY_TOOL_openocd_EXE)
+CY_OPENOCD_SCRIPTS=-s $(CY_TOOL_openocd_scripts_SCRIPT)
 
 CY_OPENOCD_INTERFACE=source [find interface/kitprog3.cfg];
 CY_OPENOCD_TARGET=source [find target/$(CY_OPENOCD_DEVICE_CFG)];

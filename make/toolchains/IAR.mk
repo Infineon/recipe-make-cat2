@@ -103,37 +103,95 @@ endif
 # CPU core specifics
 #
 ifeq ($(CORE),CM0)
+# Arm Cortex-M0 CPU
 CY_TOOLCHAIN_FLAGS_CORE=--cpu Cortex-M0
 CY_TOOLCHAIN_VFP_FLAGS=
-else ifeq ($(CORE),CM0P)
+endif
+
+ifeq ($(CORE),CM0P)
+# Arm Cortex-M0+ CPU
 CY_TOOLCHAIN_FLAGS_CORE=--cpu Cortex-M0+
 CY_TOOLCHAIN_VFP_FLAGS=
-else ifeq ($(CORE),CM4)
+endif
+
+ifeq ($(CORE),CM4)
+# Arm Cortex-M4 CPU
 CY_TOOLCHAIN_FLAGS_CORE=--cpu Cortex-M4
 CY_TOOLCHAIN_VFP_FLAGS=--fpu FPv4-SP
 ifeq ($(VFP_SELECT),hardfp)
+# FPv4 FPU, hardfp, single-precision
 CY_TOOLCHAIN_VFP_CFLAGS=$(CY_TOOLCHAIN_VFP_FLAGS) --aapcs vfp
 else ifeq ($(VFP_SELECT),softfloat)
+# Software FP
 CY_TOOLCHAIN_VFP_FLAGS=
 CY_TOOLCHAIN_VFP_CFLAGS=
 else
+# FPv4 FPU, softfp, single-precision
 CY_TOOLCHAIN_VFP_CFLAGS=$(CY_TOOLCHAIN_VFP_FLAGS) --aapcs std
 endif
-else ifeq ($(CORE),CM33)
-ifeq ($(DSPEXT),no)
+endif
+
+ifeq ($(CORE),CM7)
+# Arm Cortex-M7 CPU
+CY_TOOLCHAIN_FLAGS_CORE=--cpu Cortex-M7
+ifeq ($(VFP_SELECT),hardfp)
+ifeq ($(VFP_SELECT_PRECISION),singlefp)
+# FPv5 FPU, hardfp, single-precision
+CY_TOOLCHAIN_VFP_FLAGS=--fpu FPv5-SP
+else
+# FPv5 FPU, hardfp, double-precision
+CY_TOOLCHAIN_VFP_FLAGS=--fpu FPv5_D16
+endif
+CY_TOOLCHAIN_VFP_CFLAGS=$(CY_TOOLCHAIN_VFP_FLAGS) --aapcs vfp
+else ifeq ($(VFP_SELECT),softfloat)
+# Software FP
+CY_TOOLCHAIN_VFP_FLAGS=
+CY_TOOLCHAIN_VFP_CFLAGS=
+else
+ifeq ($(VFP_SELECT_PRECISION),singlefp)
+# FPv5 FPU, softfp, single-precision
+CY_TOOLCHAIN_VFP_FLAGS=--fpu FPv5-SP
+else
+# FPv5 FPU, softfp, double-precision
+CY_TOOLCHAIN_VFP_FLAGS=--fpu FPv5_D16
+endif
+CY_TOOLCHAIN_VFP_CFLAGS=$(CY_TOOLCHAIN_VFP_FLAGS) --aapcs std
+endif
+endif
+
+ifeq ($(CORE),CM33)
+# Arm Cortex-M33 CPU
+ifeq (,$(findstring $(DEVICE),$(CY_DEVICES_WITH_DSP)))
+# Arm Cortex-M33 CPU
 CY_TOOLCHAIN_FLAGS_CORE=--cpu Cortex-M33.no_dsp 
 else
+# Arm Cortex-M33 CPU with DSP extension
 CY_TOOLCHAIN_FLAGS_CORE=--cpu Cortex-M33 
 endif
 CY_TOOLCHAIN_VFP_FLAGS=--fpu FPv5-SP
+# See make help for VFP_SELECT
+ifeq (,$(findstring $(DEVICE),$(CY_DEVICES_WITH_FPU)))
 ifeq ($(VFP_SELECT),hardfp)
+# FPv5 FPU, hardfp, single precision
 CY_TOOLCHAIN_VFP_CFLAGS=$(CY_TOOLCHAIN_VFP_FLAGS) --aapcs vfp
 else ifeq ($(VFP_SELECT),softfloat)
+# Software FP
 CY_TOOLCHAIN_VFP_FLAGS=
 CY_TOOLCHAIN_VFP_CFLAGS=
 else
+# FPv5 FPU, softfp, single precision
 CY_TOOLCHAIN_VFP_CFLAGS=$(CY_TOOLCHAIN_VFP_FLAGS) --aapcs std
 endif
+else
+CY_TOOLCHAIN_VFP_FLAGS=
+CY_TOOLCHAIN_VFP_CFLAGS=
+endif
+endif
+
+ifeq ($(CORE),CM55)
+# Arm Cortex-M55 CPU
+CY_TOOLCHAIN_FLAGS_CORE=--cpu Cortex-M55
+CY_TOOLCHAIN_VFP_FLAGS=
 endif
 
 #

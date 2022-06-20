@@ -99,6 +99,7 @@ CY_TOOLCHAIN_COMMON_FLAGS=\
 # CPU core specifics
 #
 ifeq ($(CORE),CM0)
+# Arm Cortex-M0 CPU
 CY_TOOLCHAIN_FLAGS_CORE=\
 	-arch armv6m\
 	-mcpu=cortex-m0\
@@ -107,7 +108,10 @@ CY_TOOLCHAIN_LDFLAGS_CORE=\
 	-arch armv6m\
 	-lclang_rt.soft_static
 CY_TOOLCHAIN_VFP_FLAGS=
-else ifeq ($(CORE),CM0P)
+endif
+
+ifeq ($(CORE),CM0P)
+# Arm Cortex-M0+ CPU
 CY_TOOLCHAIN_FLAGS_CORE=\
 	-arch armv6m\
 	-mcpu=cortex-m0plus\
@@ -116,7 +120,10 @@ CY_TOOLCHAIN_LDFLAGS_CORE=\
 	-arch armv6m\
 	-lclang_rt.soft_static
 CY_TOOLCHAIN_VFP_FLAGS=
-else ifeq ($(CORE),CM4)
+endif
+
+ifeq ($(CORE),CM4)
+# Arm Cortex-M4 CPU
 ifeq ($(VFP_SELECT),hardfp)
 CY_TOOLCHAIN_LD_VFP_FLAGS=-lclang_rt.hard_static
 CY_TOOLCHAIN_VFP_FLAGS=-mfloat-abi=hard -mfpu=fpv4-sp-d16
@@ -131,9 +138,49 @@ CY_TOOLCHAIN_FLAGS_CORE=\
 CY_TOOLCHAIN_LDFLAGS_CORE=\
 	-arch armv7em\
 	$(CY_TOOLCHAIN_LD_VFP_FLAGS)
-else ifeq ($(CORE),CM33)
+endif
+
+ifeq ($(CORE),CM7)
+# Arm Cortex-M7 CPU
+ifeq ($(VFP_SELECT),hardfp)
+# Hardware fp
+CY_TOOLCHAIN_LD_VFP_FLAGS=-lclang_rt.hard_static
+ifeq ($(VFP_SELECT_PRECISION),singlefp)
+# FPv5 FPU, hardfp, single-precision
+CY_TOOLCHAIN_VFP_FLAGS=-mfloat-abi=hard -mfpu=fpv5-sp-d16
+else
+# FPv5 FPU, hardfp, double-precision
+CY_TOOLCHAIN_VFP_FLAGS=-mfloat-abi=hard -mfpu=fpv5-d16
+endif
+else
+# Software fp
+CY_TOOLCHAIN_LD_VFP_FLAGS=-lclang_rt.soft_static
+ifeq ($(VFP_SELECT_PRECISION),singlefp)
+# FPv5 FPU, softfp, single-precision
+CY_TOOLCHAIN_VFP_FLAGS=-mfloat-abi=softfp -mfpu=fpv5-sp-d16
+else
+# FPv5 FPU, softfp, double-precision
+CY_TOOLCHAIN_VFP_FLAGS=-mfloat-abi=softfp -mfpu=fpv5-d16
+endif
+endif # ($(VFP_SELECT),hardfp)
+CY_TOOLCHAIN_FLAGS_CORE=\
+	-arch armv7em\
+	-mcpu=cortex-m7\
+	--target=armv7m-none-macho
+CY_TOOLCHAIN_LDFLAGS_CORE=\
+	-arch armv7em\
+	$(CY_TOOLCHAIN_LD_VFP_FLAGS)
+endif
+
+ifeq ($(CORE),CM33)
+# Arm Cortex-M33 CPU
 $(call CY_MACRO_ERROR, CPU core-specific flags are not defined for the "$(CORE)" CPU)
-endif # ($(CORE),CM0)
+endif
+
+ifeq ($(CORE),CM55)
+# Arm Cortex-M55 CPU
+$(call CY_MACRO_ERROR, CPU core-specific flags are not defined for the "$(CORE)" CPU)
+endif
 
 #
 # Command line flags for c-files
