@@ -17,6 +17,8 @@ The this release of the PSoC 4 GNU make build recipe includes complete support f
 This also includes the getlibs.bash script that can be used directly, or via the make target to download additional git repo based libraries for the application.
 
 ### What Changed?
+#### v1.2.2
+* Added PSoC 4100S automotive devices
 #### v1.2.1
 * Added WLC1 devices
 #### v1.2.0
