@@ -27,42 +27,22 @@ ifeq ($(WHICHFILE),true)
 $(info Processing $(lastword $(MAKEFILE_LIST)))
 endif
 
-include $(CY_INTERNAL_BASELIB_PATH)/make/recipe/recipe_common.mk
-
-#
-# linker script construction
-#
-ifeq ($(LINKER_SCRIPT),)
-# Remove quotes from path and escape spaces. Spaces can already be escaped.
-LINKER_SCRIPT=$(call CY_MACRO_GET_PATH_W_ESCAPED_SPACES,$(CY_TARGET_DIR)/TOOLCHAIN_$(TOOLCHAIN)/$(CY_LINKER_SCRIPT_NAME).$(CY_TOOLCHAIN_SUFFIX_LS))
-endif
-
-
-ifeq ($(wildcard $(LINKER_SCRIPT)),)
-$(call CY_MACRO_ERROR,The specified linker script could not be found at "$(LINKER_SCRIPT)")
-endif
-
-ifeq ($(TOOLCHAIN),A_Clang)
-include $(LINKER_SCRIPT)
-else
-# Quote linker script path and remove escape from spaces
-CY_RECIPE_LSFLAG=$(CY_TOOLCHAIN_LSFLAGS)"$(call CY_MACRO_GET_RAW_PATH,$(LINKER_SCRIPT))"
-endif
+include $(MTB_TOOLS__RECIPE_DIR)/make/recipe/recipe_common.mk
 
 # Aclang arguments must match the symbols in the PDL makefile
-CY_RECIPE_ACLANG_POSTBUILD=\
-	$(CY_TOOLCHAIN_M2BIN)\
+_MTB_RECIPE__ACLANG_POSTBUILD=\
+	$(MTB_TOOLS__RECIPE_DIR)/make/scripts/m2bin \
 	--verbose --vect $(VECT_BASE_CM0P) --text $(TEXT_BASE_CM0P) --data $(RAM_BASE_CM0P) --size $(TEXT_SIZE_CM0P)\
-	$(CY_CONFIG_DIR)/$(APPNAME).mach_o\
-	$(CY_CONFIG_DIR)/$(APPNAME).bin
+	$(MTB_TOOLS__OUTPUT_CONFIG_DIR)/$(APPNAME).mach_o\
+	$(MTB_TOOLS__OUTPUT_CONFIG_DIR)/$(APPNAME).bin
 
 ################################################################################
 # Programmer tool
 ################################################################################
 
-CY_PROGTOOL_FW_LOADER=$(CY_INTERNAL_TOOL_fw-loader_EXE)
+CY_PROGTOOL_FW_LOADER=$(CY_TOOL_fw-loader_EXE_ABS)
 progtool:
-	$(CY_NOISE)echo;\
+	$(MTB__NOISE)echo;\
 	echo ==============================================================================;\
 	echo "Available commands";\
 	echo ==============================================================================;\

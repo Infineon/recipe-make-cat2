@@ -26,302 +26,101 @@ ifeq ($(WHICHFILE),true)
 $(info Processing $(lastword $(MAKEFILE_LIST)))
 endif
 
-include $(CY_INTERNAL_BASELIB_PATH)/make/recipe/defines_common.mk
-
+include $(MTB_TOOLS__RECIPE_DIR)/make/recipe/defines_common.mk
 
 ################################################################################
 # General
 ################################################################################
+#
+# Compactibility interface for this recipe make
+#
+MTB_RECIPE__INTERFACE_VERSION=1
 
 #
 # List the supported toolchains
 #
-CY_SUPPORTED_TOOLCHAINS=GCC_ARM IAR ARM
+CY_SUPPORTED_TOOLCHAINS:=GCC_ARM IAR ARM
 
-#
-# Define the default core
-#
-ifneq (,$(findstring $(DEVICE),$(CY_DEVICES_WITH_M0)))
-CORE=CM0
-else
-CORE=CM0P
-endif
-CY_START_FLASH=0x00000000
-CY_START_SRAM=0x20000000
+_MTB_RECIPE__START_FLASH:=0x00000000
 
 #
 # Architecure specifics
 #
-CY_OPENOCD_CHIP_NAME=psoc4
-CY_OPENOCD_DEVICE_CFG=psoc4.cfg
-CY_OPENOCD_OTHER_RUN_CMD?=mon psoc4 reset_halt
-CY_OPENOCD_OTHER_RUN_CMD_ECLIPSE?=$(CY_OPENOCD_OTHER_RUN_CMD)\&\#13;\&\#10;
-CY_JLINK_DEVICE_CFG_ATTACH=Cortex-M0
-CY_XRES_AVAILABLE=1
-CY_RESET_CONFIG=reset_config srst_only
+_MTB_RECIPE__OPENOCD_CHIP_NAME:=psoc4
+_MTB_RECIPE__OPENOCD_DEVICE_CFG:=psoc4.cfg
+_MTB_RECIPE__OPENOCD_OTHER_RUN_CMD?=mon psoc4 reset_halt
+_MTB_RECIPE__OPENOCD_OTHER_RUN_CMD_ECLIPSE?=$(_MTB_RECIPE__OPENOCD_OTHER_RUN_CMD)&\#13;&\#10;
+_MTB_RECIPE__JLINK_DEVICE_CFG_ATTACH:=Cortex-M0
+_MTB_RECIPE__XRES_AVAILABLE:=1
+_MTB_RECIPE__RESET_CONFIG:=reset_config srst_only
 
-ifneq (,$(findstring $(DEVICE),$(CY_DEVICES_WITH_DIE_PSOC4AS1)))
-CY_PSOC_DIE_NAME=PSoC4AS1
-else ifneq (,$(findstring $(DEVICE),$(CY_DEVICES_WITH_DIE_PSOC4AS2)))
-CY_PSOC_DIE_NAME=PSoC4AS2
-else ifneq (,$(findstring $(DEVICE),$(CY_DEVICES_WITH_DIE_PSOC4AS3)))
-CY_PSOC_DIE_NAME=PSoC4AS3
-else ifneq (,$(findstring $(DEVICE),$(CY_DEVICES_WITH_DIE_PSOC4AMC)))
-CY_PSOC_DIE_NAME=PSoC4AMC
-else ifneq (,$(findstring $(DEVICE),$(CY_DEVICES_WITH_DIE_PSOC4AS4)))
-CY_PSOC_DIE_NAME=PSoC4AS4
-else ifneq (,$(findstring $(DEVICE),$(CY_DEVICES_WITH_DIE_CCG3PA)))
-CY_PSOC_DIE_NAME=CCG3PA
-CY_XRES_AVAILABLE=0
-CY_RESET_CONFIG=$(CY_OPENOCD_CHIP_NAME).cpu cortex_m reset_config sysresetreq
-else ifneq (,$(findstring $(DEVICE),$(CY_DEVICES_WITH_DIE_CCG6)))
-CY_PSOC_DIE_NAME=CCG6
-else ifneq (,$(findstring $(DEVICE),$(CY_DEVICES_WITH_DIE_CCG3)))
-CY_PSOC_DIE_NAME=CCG3
-else ifneq (,$(findstring $(DEVICE),$(CY_DEVICES_WITH_DIE_PMG1S3)))
-CY_PSOC_DIE_NAME=PMG1S3
-else ifneq (,$(findstring $(DEVICE),$(CY_DEVICES_WITH_DIE_CCG7D)))
-CY_PSOC_DIE_NAME=CCG7D
-else ifneq (,$(findstring $(DEVICE),$(CY_DEVICES_WITH_DIE_CCG7S)))
-CY_PSOC_DIE_NAME=CCG7S
-else
-$(call CY_MACRO_ERROR,Incorrect part number $(DEVICE). Check DEVICE variable.)
+ifeq (CCG3PA,$(_MTB_RECIPE__DEVICE_DIE))
+_MTB_RECIPE__XRES_AVAILABLE:=0
+_MTB_RECIPE__RESET_CONFIG:=$(_MTB_RECIPE__OPENOCD_CHIP_NAME).cpu cortex_m reset_config sysresetreq
 endif
 
-#
-# Flash memory specifics
-#
-ifneq (,$(findstring $(DEVICE),$(CY_DEVICES_WITH_FLASH_KB_16)))
-CY_MEMORY_FLASH=16384
-else ifneq (,$(findstring $(DEVICE),$(CY_DEVICES_WITH_FLASH_KB_32)))
-CY_MEMORY_FLASH=32768
-else ifneq (,$(findstring $(DEVICE),$(CY_DEVICES_WITH_FLASH_KB_64)))
-CY_MEMORY_FLASH=65536
-else ifneq (,$(findstring $(DEVICE),$(CY_DEVICES_WITH_FLASH_KB_128)))
-CY_MEMORY_FLASH=131072
-else ifneq (,$(findstring $(DEVICE),$(CY_DEVICES_WITH_FLASH_KB_256)))
-CY_MEMORY_FLASH=262144
-else ifneq (,$(findstring $(DEVICE),$(CY_DEVICES_WITH_FLASH_KB_384)))
-CY_MEMORY_FLASH=393216
-else
-$(call CY_MACRO_ERROR,No Flash memory size defined for $(DEVICE))
-endif
-
-#
-# SRAM memory specifics
-#
-ifneq (,$(findstring $(DEVICE),$(CY_DEVICES_WITH_SRAM_KB_2)))
-CY_MEMORY_SRAM=2048
-else ifneq (,$(findstring $(DEVICE),$(CY_DEVICES_WITH_SRAM_KB_4)))
-CY_MEMORY_SRAM=4096
-else ifneq (,$(findstring $(DEVICE),$(CY_DEVICES_WITH_SRAM_KB_8)))
-CY_MEMORY_SRAM=8192
-else ifneq (,$(findstring $(DEVICE),$(CY_DEVICES_WITH_SRAM_KB_12)))
-CY_MEMORY_SRAM=12288
-else ifneq (,$(findstring $(DEVICE),$(CY_DEVICES_WITH_SRAM_KB_16)))
-CY_MEMORY_SRAM=16384
-else ifneq (,$(findstring $(DEVICE),$(CY_DEVICES_WITH_SRAM_KB_32)))
-CY_MEMORY_SRAM=32768
-else
-$(call CY_MACRO_ERROR,No SRAM memory size defined for $(DEVICE))
-endif
-
-# Architecture specifics
-CY_MACRO_STARTUP_CALC=$(strip \
-	$(if $(findstring $(1),$(CY_DEVICES_WITH_DIE_PSOC4AS1)),\
-	psoc4000s,\
-	$(if $(findstring $(1),$(CY_DEVICES_WITH_DIE_PSOC4AS2)),\
-	psoc4100s,\
-	$(if $(findstring $(1),$(CY_DEVICES_WITH_DIE_PSOC4AS3)),\
-	psoc4100sp,\
-	$(if $(findstring $(1),$(CY_DEVICES_WITH_DIE_PSOC4AMC)),\
-	psoc4100sp256kb,\
-	$(if $(findstring $(1),$(CY_DEVICES_WITH_DIE_PSOC4AS4)),\
-	psoc4100smax,\
-	$(if $(findstring $(1),$(CY_DEVICES_WITH_DIE_CCG3PA)),\
-	pmg1s0,\
-	$(if $(findstring $(1),$(CY_DEVICES_WITH_DIE_CCG6)),\
-	pmg1s1,\
-	$(if $(findstring $(1),$(CY_DEVICES_WITH_DIE_CCG3)),\
-	pmg1s2,\
-	$(if $(findstring $(1),$(CY_DEVICES_WITH_DIE_PMG1S3)),\
-	pmg1s3,\
-	$(if $(findstring $(1),$(CY_DEVICES_WITH_DIE_CCG7D)),\
-	ccg7d,\
-	$(if $(findstring $(1),$(CY_DEVICES_WITH_DIE_CCG7S)),\
-	ccg7s,\
-	$(if $(findstring $(1),$(CY_DEVICES_WITH_DIE_PAG2S)),\
-	pag2s,\
-	$(if $(findstring $(1),$(CY_DEVICES_WITH_DIE_PSOC4ASF2)),\
-	psoc4000t,\
-	))))))))))))))
-
-#
-# linker scripts
-#
-
-CY_MACRO_LINKER_CALC=$(strip \
-	$(if $(findstring $(1),$(CY_DEVICES_WITH_DIE_CCG3PA)),\
-	pmg1s0,\
-	$(if $(findstring $(1),$(CY_DEVICES_WITH_DIE_CCG6)),\
-	pmg1s1,\
-	$(if $(findstring $(1),$(CY_DEVICES_WITH_DIE_CCG3)),\
-	pmg1s2,\
-	$(if $(findstring $(1),$(CY_DEVICES_WITH_DIE_PMG1S3)),\
-	pmg1s3,\
-	$(if $(findstring $(1),$(CY_DEVICES_WITH_DIE_CCG7D)),\
-	ccg7d,\
-	$(if $(findstring $(1),$(CY_DEVICES_WITH_DIE_CCG7S)),\
-	ccg7s,\
-	$(if $(findstring $(1),$(CY_DEVICES_WITH_DIE_PAG2S)),\
-	pag2s,\
-	$(if $(findstring $(1),$(CY_DEVICES_WITH_DIE_PSOC4ASF2)),\
-	$(if $(findstring $(1),$(CY_DEVICES_WITH_FLASH_KB_32)),\
-	cy8c4xx5,cy8c4xx6),\
-	$(if $(findstring $(1),$(CY_DEVICES_WITH_FLASH_KB_16)),\
-	$(if $(findstring $(1),$(CY_DEVICES_WITH_SRAM_KB_4)),\
-	cy8c4xx4,\
-	$(if $(findstring CY8C47,$(1)),\
-	cy8c47x4,cy8c40x4)),\
-	$(if $(findstring $(1),$(CY_DEVICES_WITH_FLASH_KB_32)),\
-	cy8c4xx5,\
-	$(if $(findstring $(1),$(CY_DEVICES_WITH_FLASH_KB_64)),\
-	$(if $(findstring $(1),$(CY_DEVICES_WITH_SRAM_KB_8)),\
-	cy8c4xx6,cy8c45x6),\
-	$(if $(findstring $(1),$(CY_DEVICES_WITH_FLASH_KB_128)),\
-	$(if $(findstring $(1),$(CY_DEVICES_WITH_SRAM_KB_16)),\
-	cy8c4xx7,cy8c45x7),\
-	$(if $(findstring $(1),$(CY_DEVICES_WITH_FLASH_KB_256)),\
-	cy8c4xx8,\
-	$(if $(findstring $(1),$(CY_DEVICES_WITH_FLASH_KB_384)),\
-	cy8c4xx9,\
-	)))))))))))))))
-
-CY_STARTUP=$(call CY_MACRO_STARTUP_CALC,$(DEVICE))
-CY_LINKER_SCRIPT_NAME=$(call CY_MACRO_LINKER_CALC,$(DEVICE))
-ifeq ($(CY_LINKER_SCRIPT_NAME),)
-$(call CY_MACRO_ERROR,Could not resolve device series for linker script)
-endif
-
-#
-# QSPI
-#
-CY_QSPI_CMSIS_FLM_FILE_NAME=CY8C4xxx.FLM
-CY_QSPI_IAR_FLM_FILE_NAME=FlashCY8C4xxx.out
-
-################################################################################
-# BSP generation
-################################################################################
-
-DEVICE_GEN?=$(DEVICE)
-
-CY_BSP_STARTUP=$(call CY_MACRO_STARTUP_CALC,$(DEVICE_GEN))
-CY_BSP_LINKER_SCRIPT=$(call CY_MACRO_LINKER_CALC,$(DEVICE_GEN))
-
-# Paths
-CY_BSP_TEMPLATES_DIR=$(CY_CONDITIONAL_DEVICESUPPORT_PATH)/devices/COMPONENT_CAT2/templates/COMPONENT_MTB
-ifeq ($(wildcard $(CY_BSP_TEMPLATES_DIR)),)
-CY_BSP_TEMPLATES_DIR=$(CY_CONDITIONAL_DEVICESUPPORT_PATH)/devices/templates/COMPONENT_MTB
-endif
-CY_TEMPLATES_DIR=$(CY_BSP_TEMPLATES_DIR)
-CY_BSP_DESTINATION_ABSOLUTE=$(abspath $(CY_TARGET_GEN_DIR))
-
-ifeq ($(strip $(CY_BSP_LINKER_SCRIPT) $(CY_BSP_STARTUP)),)
-CY_BSP_TEMPLATES_CMD=echo "Could not locate template linker scripts and startup files for DEVICE $(DEVICE_GEN). Skipping update...";
-endif
-
-# Command for searching files in the template directory
-CY_BSP_SEARCH_FILES_CMD=\
-	-name system_cat2* \
-	-o -name *$(CY_BSP_STARTUP)\.* \
-	-o -name *$(CY_BSP_LINKER_SCRIPT)\.*
-
-# Command for searching old bsp template files in the template directory to backup
-CY_SEARCH_FILES_CMD=
-# system_cat2* is not in this list because it is same across all cat2 devices.
-ifneq ($(CY_STARTUP),$(CY_BSP_STARTUP))
-CY_SEARCH_FILES_CMD+=-name *$(CY_STARTUP)\.*
-endif
-
-ifneq ($(CY_LINKER_SCRIPT_NAME),$(CY_BSP_LINKER_SCRIPT))
-
-ifneq ($(CY_SEARCH_FILES_CMD),)
-CY_SEARCH_FILES_CMD+=-o
-endif
-CY_SEARCH_FILES_CMD+=-name *$(CY_LINKER_SCRIPT_NAME)\.*
-endif
-
-################################################################################
-# Paths
-################################################################################
-
-# Paths used in program/debug
-ifeq ($(CY_DEVICESUPPORT_PATH),)
-CY_ECLIPSE_OPENOCD_SVD_PATH?=$$\{cy_prj_path\}/$(dir $(firstword $(CY_DEVICESUPPORT_SEARCH_PATH)))devices/svd/$(CY_STARTUP).svd
-CY_VSCODE_OPENOCD_SVD_PATH?=$(dir $(firstword $(CY_DEVICESUPPORT_SEARCH_PATH)))devices/svd/$(CY_STARTUP).svd
-else
-CY_ECLIPSE_OPENOCD_SVD_PATH?=$$\{cy_prj_path\}/$(CY_DEVICESUPPORT_PATH)/devices/svd/$(CY_STARTUP).svd
-CY_VSCODE_OPENOCD_SVD_PATH?=$(CY_DEVICESUPPORT_PATH)/devices/svd/$(CY_STARTUP).svd
+ifeq (PAG2S,$(_MTB_RECIPE__DEVICE_DIE))
+_MTB_RECIPE__OPENOCD_DEVICE_CFG:=pag2s.cfg
+_MTB_RECIPE__OPENOCD_CHIP_NAME:=psoc4hv
 endif
 
 ################################################################################
 # IDE specifics
 ################################################################################
 
+MTB_RECIPE__IDE_SUPPORTED:=eclipse vscode uvision5 ewarm8
+
 ifeq ($(filter vscode,$(MAKECMDGOALS)),vscode)
-CY_VSCODE_ARGS+="s|&&DEVICE&&|$(DEVICE)|g;"\
-				"s|&&CY_XRES_AVAILABLE&&|$(CY_XRES_AVAILABLE)|g;"\
-				"s|&&CY_RESET_CONFIG&&|$(CY_RESET_CONFIG)|g;"
+$(MTB_RECIPE__IDE_RECIPE_DATA_FILE)_vscode:
+	$(MTB_NOISE)echo "s|&&DEVICE&&|$(DEVICE)|g;" > $(MTB_RECIPE__IDE_RECIPE_DATA_FILE);\
+	echo "s|&&_MTB_RECIPE__XRES_AVAILABLE&&|$(_MTB_RECIPE__XRES_AVAILABLE)|g;" >> $(MTB_RECIPE__IDE_RECIPE_DATA_FILE);\
+	echo "s|&&_MTB_RECIPE__RESET_CONFIG&&|$(_MTB_RECIPE__RESET_CONFIG)|g;" >> $(MTB_RECIPE__IDE_RECIPE_DATA_FILE);
 endif
 
 ifeq ($(filter eclipse,$(MAKECMDGOALS)),eclipse)
-CY_ECLIPSE_ARGS+="s|&&CY_OPENOCD_OTHER_RUN_CMD&&|$(CY_OPENOCD_OTHER_RUN_CMD_ECLIPSE)|g;"\
-				"s|&&CY_JLINK_CFG_PROGRAM&&|$(DEVICE)|g;"\
-				"s|&&CY_JLINK_CFG_DEBUG&&|$(DEVICE)|g;"\
-				"s|&&CY_JLINK_CFG_ATTACH&&|$(CY_JLINK_DEVICE_CFG_ATTACH)|g;"\
-				"s|&&CY_XRES_AVAILABLE&&|$(CY_XRES_AVAILABLE)|g;"\
-				"s|&&CY_RESET_CONFIG&&|$(CY_RESET_CONFIG)|g;"
+eclipse_textdata_file:
+	$(call mtb__file_append,$(MTB_RECIPE__IDE_RECIPE_DATA_FILE),&&_MTB_RECIPE__OPENOCD_OTHER_RUN_CMD&&=$(_MTB_RECIPE__OPENOCD_OTHER_RUN_CMD_ECLIPSE))
+	$(call mtb__file_append,$(MTB_RECIPE__IDE_RECIPE_DATA_FILE),&&_MTB_RECIPE__JLINK_CFG_PROGRAM&&=$(DEVICE))
+	$(call mtb__file_append,$(MTB_RECIPE__IDE_RECIPE_DATA_FILE),&&_MTB_RECIPE__JLINK_CFG_DEBUG&&=$(DEVICE))
+	$(call mtb__file_append,$(MTB_RECIPE__IDE_RECIPE_DATA_FILE),&&_MTB_RECIPE__JLINK_CFG_ATTACH&&=$(_MTB_RECIPE__JLINK_DEVICE_CFG_ATTACH))
+	$(call mtb__file_append,$(MTB_RECIPE__IDE_RECIPE_DATA_FILE),&&_MTB_RECIPE__XRES_AVAILABLE&&=$(_MTB_RECIPE__XRES_AVAILABLE))
+	$(call mtb__file_append,$(MTB_RECIPE__IDE_RECIPE_DATA_FILE),&&_MTB_RECIPE__RESET_CONFIG&&=$(_MTB_RECIPE__RESET_CONFIG))
+
+_MTB_ECLIPSE_TEMPLATE_RECIPE_SEARCH:=$(MTB_TOOLS__RECIPE_DIR)/make/scripts/eclipse
+_MTB_ECLIPSE_TEMPLATE_RECIPE_APP_SEARCH:=$(MTB_TOOLS__RECIPE_DIR)/make/scripts/eclipse/Application
+
+eclipse_recipe_metadata_file:
+	$(call mtb__file_append,$(MTB_RECIPE__IDE_RECIPE_METADATA_FILE),RECIPE_TEMPLATE=$(_MTB_ECLIPSE_TEMPLATE_RECIPE_SEARCH))
+	$(call mtb__file_append,$(MTB_RECIPE__IDE_RECIPE_METADATA_FILE),RECIPE_APP_TEMPLATE=$(_MTB_ECLIPSE_TEMPLATE_RECIPE_APP_SEARCH))
+	$(call mtb__file_append,$(MTB_RECIPE__IDE_RECIPE_METADATA_FILE),PROJECT_UUID=&&PROJECT_UUID&&)
+
 endif
 
-CY_IAR_DEVICE_NAME=$(DEVICE)
+ewarm8_recipe_data_file:
+	$(call mtb__file_write,$(MTB_RECIPE__IDE_RECIPE_DATA_FILE),$(DEVICE))
 
-CY_CMSIS_ARCH_NAME=PSoC4_DFP
-CY_CMSIS_VENDOR_NAME=Cypress
-CY_CMSIS_VENDOR_ID=19
-CY_CMSIS_SPECIFY_CORE=1
+ewarm8: ewarm8_recipe_data_file
 
-################################################################################
-# Tools specifics
-################################################################################
+_MTB_RECIPE__CMSIS_ARCH_NAME:=PSoC4_DFP
+_MTB_RECIPE__CMSIS_VENDOR_NAME:=Cypress
+_MTB_RECIPE__CMSIS_VENDOR_ID:=19
 
-modus_DEFAULT_TYPE+=device-configurator
-
-# Check if device supports SmartIO
-ifneq (,$(findstring $(DEVICE),$(CY_DEVICES_WITH_DIE_PSOC4AS1)\
-								$(CY_DEVICES_WITH_DIE_PSOC4AS2)\
-								$(CY_DEVICES_WITH_DIE_PSOC4AS3)\
-								$(CY_DEVICES_WITH_DIE_PSOC4AS4)\
-								$(CY_DEVICES_WITH_DIE_PSOC4AMC)\
-								$(CY_DEVICES_WITH_DIE_PSOC4ASF2)))
-CY_SUPPORTED_TOOL_TYPES+=smartio-configurator
-# PSoC 4 smartio also uses the .modus extension
-modus_DEFAULT_TYPE+=smartio-configurator
+# Define _MTB_RECIPE__CMSIS_PNAME for export into uVision
+ifeq ($(MTB_RECIPE__CORE),CM0)
+_MTB_RECIPE__CMSIS_PNAME:=Cortex-M0
+else ifeq ($(MTB_RECIPE__CORE),CM0P)
+_MTB_RECIPE__CMSIS_PNAME:=Cortex-M0p
+else
+_MTB_RECIPE__CMSIS_PNAME:=
 endif
 
-# PSoC 4 capsense-tuner shares its existence with capsense-configurator
-CY_OPEN_NEWCFG_XML_TYPES+=capsense-tuner
+_MTB_RECIPE__CMSIS_LDFLAGS:=
 
-CY_SUPPORTED_TOOL_TYPES+=\
-	device-configurator\
-	seglcd-configurator\
-	dfuh-tool
+uvision5_recipe_data_file:
+	$(call mtb__file_write,$(MTB_RECIPE__IDE_RECIPE_DATA_FILE),$(_MTB_RECIPE__CMSIS_ARCH_NAME))
+	$(call mtb__file_append,$(MTB_RECIPE__IDE_RECIPE_DATA_FILE),$(_MTB_RECIPE__CMSIS_VENDOR_NAME))
+	$(call mtb__file_append,$(MTB_RECIPE__IDE_RECIPE_DATA_FILE),$(_MTB_RECIPE__CMSIS_VENDOR_ID))
+	$(call mtb__file_append,$(MTB_RECIPE__IDE_RECIPE_DATA_FILE),$(_MTB_RECIPE__CMSIS_PNAME))
+	$(call mtb__file_append,$(MTB_RECIPE__IDE_RECIPE_DATA_FILE),$(_MTB_RECIPE__CMSIS_LDFLAGS))
 
-# CCG7D does not support lin configurator.
-ifeq (,$(findstring $(DEVICE),$(CY_DEVICES_WITH_DIE_CCG7D)))
-CY_SUPPORTED_TOOL_TYPES+=lin-configurator
-endif
-
-
-ifneq (,$(findstring $(DEVICE),$(CY_DEVICES_WITH_USBPD)))
-CY_SUPPORTED_TOOL_TYPES+=ez-pd-configurator
-endif
+uvision5: uvision5_recipe_data_file
