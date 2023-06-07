@@ -7,7 +7,7 @@
 #
 ################################################################################
 # \copyright
-# Copyright 2018-2021 Cypress Semiconductor Corporation
+# Copyright 2018-2023 Cypress Semiconductor Corporation
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -29,7 +29,11 @@ endif
 
 include $(MTB_TOOLS__RECIPE_DIR)/make/recipe/program_common.mk
 
+ifeq ($(_MTB_RECIPE__PROGRAM_INTERFACE_SUBDIR), JLink)
+_MTB_RECIPE__GDB_ARGS=$(MTB_TOOLS__RECIPE_DIR)/make/scripts/gdbinit_jlink
+else
 _MTB_RECIPE__GDB_ARGS=$(MTB_TOOLS__RECIPE_DIR)/make/scripts/gdbinit
+endif
 
 ifeq ($(TOOLCHAIN),A_Clang)
 _MTB_RECIPE__OPENOCD_PROGRAM_IMG=$(MTB_TOOLS__OUTPUT_CONFIG_DIR)/$(APPNAME).bin $(TOOLCHAIN_VECT_BASE_CM4)
@@ -60,3 +64,6 @@ _MTB_RECIPE__OPENOCD_PROGRAM_ARGS=$(_MTB_RECIPE__OPENOCD_SCRIPTS) -c \
 					"set PSOC4_USE_ACQUIRE $(_MTB_RECIPE__XRES_AVAILABLE); $(_MTB_RECIPE__OPENOCD_ARGS) $(_MTB_RECIPE__OPENOCD_PROGRAM)"
 _MTB_RECIPE__OPENOCD_DEBUG_ARGS=$(_MTB_RECIPE__OPENOCD_SCRIPTS) -c \
 					"set PSOC4_USE_ACQUIRE $(_MTB_RECIPE__XRES_AVAILABLE); $(_MTB_RECIPE__OPENOCD_ARGS) $(_MTB_RECIPE__OPENOCD_DEBUG)"
+
+_MTB_RECIPE__JLINK_DEVICE_CFG_PROGRAM=$(DEVICE)
+_MTB_RECIPE__JLINK_DEBUG_ARGS=-if swd -device $(DEVICE) -endian little -speed auto -port 2334 -swoport 2335 -telnetport 2336 -vd -ir -localhostonly 1 -singlerun -strict -timeout 0 -nogui
