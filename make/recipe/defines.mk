@@ -2,7 +2,7 @@
 # \file defines.mk
 #
 # \brief
-# Defines, needed for the PSoC 4 build recipe.
+# Defines, needed for the PSOC(TM) 4 build recipe.
 #
 ################################################################################
 # \copyright
@@ -32,15 +32,26 @@ include $(MTB_TOOLS__RECIPE_DIR)/make/recipe/defines_common.mk
 # General
 ################################################################################
 _MTB_RECIPE__PROGRAM_INTERFACE_SUPPORTED:=KitProg3 JLink
+_MTB_RECIPE__DEBUG_INTERFACE_SUPPORTED:=swd
+_MTB_RECIPE__DEFAULT_DEBUG_INTERFACE:=swd
+
 #
 # Compactibility interface for this recipe make
 #
 MTB_RECIPE__INTERFACE_VERSION:=2
+MTB_RECIPE__EXPORT_INTERFACES:=1 2 3
 
 #
 # List the supported toolchains
 #
-CY_SUPPORTED_TOOLCHAINS:=GCC_ARM IAR ARM
+ifdef CY_SUPPORTED_TOOLCHAINS
+MTB_SUPPORTED_TOOLCHAINS?=$(CY_SUPPORTED_TOOLCHAINS)
+else
+MTB_SUPPORTED_TOOLCHAINS?=GCC_ARM IAR ARM LLVM_ARM
+endif
+
+# For BWC with Makefiles that do anything with CY_SUPPORTED_TOOLCHAINS
+CY_SUPPORTED_TOOLCHAINS:=$(MTB_SUPPORTED_TOOLCHAINS)
 
 _MTB_RECIPE__START_FLASH:=0x00000000
 

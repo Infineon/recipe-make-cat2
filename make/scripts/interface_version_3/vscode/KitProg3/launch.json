@@ -1,0 +1,91 @@
+        {
+            "name": "Launch PSoC4 CM0 (KitProg3_MiniProg4)",
+            "type": "cortex-debug",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "executable": "&&_MTB_RECIPE__ELF_FILE&&",
+            "servertype": "openocd",
+            "searchDir": [
+                "${workspaceFolder}",
+                "${config:modustoolbox.toolsPath}/&&_MTB_RECIPE__OPENOCD_SCRIPTS_DIR_RELATIVE&&/"
+            ],
+            "configFiles": [
+                "openocd.tcl"
+            ],
+            "openOCDPreConfigLaunchCommands": [
+                "set PSOC4_USE_ACQUIRE &&_MTB_RECIPE__XRES_AVAILABLE&&"
+            ],
+            "overrideLaunchCommands": [
+                "set mem inaccessible-by-default off",
+                "-enable-pretty-printing",
+                "monitor reset init",
+                // Comment this next line out if you don't want to reload program
+                "monitor program {&&_MTB_RECIPE__HEX_FILE&&}",
+                "starti",
+                "monitor psoc4 reset_halt"
+            ],
+            "postStartSessionCommands": [       // Needed if runToMain is false
+                // Following two commands are needed to get gdb and openocd and HW all in sync.
+                // Or, execution context (PC, stack, registers, etc.) look like they are from before reset.
+                // The stepi, is a pretend instruction that does not actually do a stepi, but MUST be done
+                // Its a documented workaround in openocd. Do a 'monitor help' to see more info
+                //
+                // An alternative command to use is "continue" instead of the following two
+                "monitor gdb_sync",
+                "stepi"
+            ],
+            "overrideRestartCommands": [
+                "starti",
+                "monitor psoc4 reset_halt"
+            ],
+            "postRestartSessionCommands": [
+                "monitor gdb_sync",
+                "stepi"
+            ],
+            // svdFile is optional, it can be very large.
+            "svdFile": "&&_MTB_RECIPE__SVD_FILE_NAME&&",
+            "breakAfterReset": true,
+            "runToEntryPoint": "main",    // Specifies application entry point name where program will halt
+            "preLaunchTask": "Build",    // Set this to run a task from tasks.json
+                                                        // before starting a debug session
+            "showDevDebugOutput": "none"
+        },
+        // When using 'attach', make sure your program is running on the board and that your
+        // executable matches the image in the chip exactly, or else strange things can happen
+        // with breakpoints, variables, etc.
+        {
+            "name": "Attach PSoC4 CM0 (KitProg3_MiniProg4)",
+            "type": "cortex-debug",
+            "request": "attach",
+            "cwd": "${workspaceFolder}",
+            "executable": "&&_MTB_RECIPE__ELF_FILE&&",
+            "servertype": "&&_MTB_RECIPE__ATTACH_SERVER_TYPE&&",
+            "searchDir": [
+                "${workspaceFolder}",
+                "${config:modustoolbox.toolsPath}/&&_MTB_RECIPE__OPENOCD_SCRIPTS_DIR_RELATIVE&&/"
+            ],
+            "openOCDPreConfigLaunchCommands": [
+                "set PSOC4_USE_ACQUIRE 0"
+            ],
+            "configFiles": [
+                "openocd.tcl"
+            ],
+            "overrideAttachCommands": [
+                "set mem inaccessible-by-default off",
+                "-enable-pretty-printing",
+                "monitor halt"
+            ],
+            "overrideRestartCommands": [
+                "starti",
+                "monitor psoc4 reset_halt"
+            ],
+            "postRestartSessionCommands": [
+                "monitor gdb_sync",
+                "stepi"
+            ],
+            // svdFile is optional, it can be very large.
+            "svdFile": "&&_MTB_RECIPE__SVD_FILE_NAME&&",
+            "breakAfterReset": true,
+            "runToEntryPoint": "main",    // Specifies application entry point name for restart/reset
+            "showDevDebugOutput": "none"
+        }

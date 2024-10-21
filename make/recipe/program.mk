@@ -52,7 +52,7 @@ ifneq ($(PROG_FILE),)
 _MTB_RECIPE__OPENOCD_PROGRAM_IMG=$(PROG_FILE)
 endif
 
-_MTB_RECIPE__OPENOCD_ARGS=$(_MTB_RECIPE__OPENOCD_INTERFACE); $(_MTB_RECIPE__OPENOCD_TARGET);
+_MTB_RECIPE__OPENOCD_ARGS=$(_MTB_RECIPE__OPENOCD_INTERFACE); $(_MTB_RECIPE__OPENOCD_PROBE_SERIAL) $(_MTB_RECIPE__OPENOCD_TARGET);
 
 _MTB_RECIPE__OPENOCD_ERASE=init; reset init; flash erase_sector 0 0 last; exit;
 _MTB_RECIPE__OPENOCD_PROGRAM=program $(_MTB_RECIPE__OPENOCD_PROGRAM_IMG) verify reset exit;
@@ -66,4 +66,4 @@ _MTB_RECIPE__OPENOCD_DEBUG_ARGS=$(_MTB_RECIPE__OPENOCD_SCRIPTS) -c \
 					"set PSOC4_USE_ACQUIRE $(_MTB_RECIPE__XRES_AVAILABLE); $(_MTB_RECIPE__OPENOCD_ARGS) $(_MTB_RECIPE__OPENOCD_DEBUG)"
 
 _MTB_RECIPE__JLINK_DEVICE_CFG_PROGRAM=$(DEVICE)
-_MTB_RECIPE__JLINK_DEBUG_ARGS=-if swd -device $(DEVICE) -endian little -speed auto -port 2334 -swoport 2335 -telnetport 2336 -vd -ir -localhostonly 1 -singlerun -strict -timeout 0 -nogui
+_MTB_RECIPE__JLINK_DEBUG_ARGS=-if $(_MTB_RECIPE__PROBE_INTERFACE) $(_MTB_RECIPE__JLINK_PROBE_SERIAL) -device $(DEVICE) -endian little -speed auto -port 2334 -swoport 2335 -telnetport 2336 -vd -ir -localhostonly 1 -singlerun -strict -timeout 0 -nogui
