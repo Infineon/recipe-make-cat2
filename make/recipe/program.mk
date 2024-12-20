@@ -55,7 +55,7 @@ endif
 _MTB_RECIPE__OPENOCD_ARGS=$(_MTB_RECIPE__OPENOCD_INTERFACE); $(_MTB_RECIPE__OPENOCD_PROBE_SERIAL) $(_MTB_RECIPE__OPENOCD_TARGET);
 
 _MTB_RECIPE__OPENOCD_ERASE=init; reset init; flash erase_sector 0 0 last; exit;
-_MTB_RECIPE__OPENOCD_PROGRAM=program $(_MTB_RECIPE__OPENOCD_PROGRAM_IMG) verify reset exit;
+_MTB_RECIPE__OPENOCD_PROGRAM=program $(_MTB_RECIPE__OPENOCD_PROGRAM_IMG) verify; reset_config srst_only; reset run; psoc4.dap dpreg 0x04 0x00; shutdown;
 _MTB_RECIPE__OPENOCD_DEBUG=$(_MTB_RECIPE__OPENOCD_CHIP_NAME).cpu configure -rtos auto -rtos-wipe-on-reset-halt 1; init; reset init;
 
 _MTB_RECIPE__OPENOCD_ERASE_ARGS=$(_MTB_RECIPE__OPENOCD_SCRIPTS) -c \
