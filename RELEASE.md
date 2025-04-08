@@ -16,8 +16,12 @@ This release of the PSOC™ 4 GNU make build recipe includes complete support fo
     * LLVM Embedded Toolchain for Arm (Experimental)
 
 ### What Changed?
-#### v2.3.2
-* Fixed a post-program reset, which could caused some applications to run incorrectly.
+#### v2.5.0
+* Moved CFLAGS, CXXFLAGS, ASFLAGS, LDFLAGS variables to be added after default flags. In case of conflict, most toolchains select the last flags as the option. This allows those variables to overwrite the default flags.
+* Added support for GNU assembly syntax when using ARM toolchain.
+
+#### v2.4.0
+* Added Ninja support. Ninja build will be enabled by default with ModusToolbox 3.4, and latest core-make. To disable Ninja build set NINJA to empty-String. (For example: "make build NINJA=").
 
 #### v2.3.1
 * Fixed a postbuild dependency that could cause memcalc to fail.
@@ -72,12 +76,12 @@ This version of the PSOC™ 4 build system was validated for compatibility with 
 
 | Software and Tools                        | Version |
 | :---                                      | :----:  |
-| ModusToolbox Software Environment         | 3.3     |
+| ModusToolbox Software Environment         | 3.5     |
 | GCC Compiler                              | 11.3    |
 | IAR Compiler                              | 9.3     |
 | ARM Compiler                              | 6.16    |
 
-Minimum required ModusToolbox Software Environment: v3.0
+Minimum required ModusToolbox Software Environment: v3.4
 
 ### More information
 * [Infineon GitHub](https://github.com/Infineon)
@@ -85,4 +89,3 @@ Minimum required ModusToolbox Software Environment: v3.0
 
 ---
 (c) 2019-2025, Cypress Semiconductor Corporation (an Infineon company) or an affiliate of Cypress Semiconductor Corporation. All rights reserved.
-

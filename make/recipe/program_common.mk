@@ -6,7 +6,7 @@
 #
 ################################################################################
 # \copyright
-# (c) 2018-2024, Cypress Semiconductor Corporation (an Infineon company) or
+# (c) 2018-2025, Cypress Semiconductor Corporation (an Infineon company) or
 # an affiliate of Cypress Semiconductor Corporation. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -26,6 +26,35 @@
 ifeq ($(WHICHFILE),true)
 $(info Processing $(lastword $(MAKEFILE_LIST)))
 endif
+
+################################################################################
+# QSPI programming flags
+# NOTE: These flags are also used to generate IDE launch config
+################################################################################
+
+# get the path of design.cyqspi file
+_MTB_RECIPE__QSPI_CONFIG_FILE:=$(filter %.cyqspi,$(CY_SEARCH_ALL_FILES))
+ifeq ($(_MTB_RECIPE__QSPI_CONFIG_FILE),)
+_MTB_RECIPE__QSPI_CONFIG_FILE:=$(call mtb_core__rwildcard,$(SEARCH_TARGET_$(TARGET)),%.cyqspi)
+endif
+
+ifneq ($(words $(_MTB_RECIPE__QSPI_CONFIG_FILE)),1)
+ifneq ($(words $(_MTB_RECIPE__QSPI_CONFIG_FILE)),0)
+$(warning Multiple .cyqspi files found: $(_MTB_RECIPE__QSPI_CONFIG_FILE) -- using the first. If a different .cyqspi file is required, remove the extra .cyqspi files)
+ _MTB_RECIPE__QSPI_CONFIG_FILE:=$(word 1,$(_MTB_RECIPE__QSPI_CONFIG_FILE))
+endif
+endif
+
+ifeq ($(_MTB_RECIPE__QSPI_CONFIG_FILE),)
+_MTB_RECIPE__OPENOCD_QSPI_CFG_PATH:=
+_MTB_RECIPE__OPENOCD_QSPI_CFG_PATH_WITH_FLAG:=
+_MTB_RECIPE__OPENOCD_QSPI_CFG_PATH_APPLICATION_WITH_FLAG:=
+else
+_MTB_RECIPE__OPENOCD_QSPI_CFG_PATH:=$(call mtb__get_dir,$(_MTB_RECIPE__QSPI_CONFIG_FILE))/GeneratedSource
+_MTB_RECIPE__OPENOCD_QSPI_CFG_PATH_WITH_FLAG:=-s &quot;$(_MTB_RECIPE__OPENOCD_QSPI_CFG_PATH)&quot;&\#13;&\#10;
+_MTB_RECIPE__OPENOCD_QSPI_CFG_PATH_APPLICATION_WITH_FLAG:=-s &quot;$(patsubst $(call mtb_path_normalize,$(MTB_TOOLS__PRJ_DIR)/..)/%,%,$(call mtb_path_normalize,$(_MTB_RECIPE__OPENOCD_QSPI_CFG_PATH)))&quot;&\#13;&\#10;
+endif
+_MTB_RECIPE__OPENOCD_QSPI_CFG_PATH_APPLICATION:=$(patsubst $(call mtb_path_normalize,$(MTB_TOOLS__PRJ_DIR)/..)/%,%,$(call mtb_path_normalize,$(_MTB_RECIPE__OPENOCD_QSPI_CFG_PATH)))
 
 _MTB_RECIPE__OPENOCD_SCRIPTS=-s $(CY_TOOL_openocd_scripts_SCRIPT_ABS)
 
@@ -55,7 +84,7 @@ endif
 
 ifneq ($(MTB_ERASE_EXT_MEM),)
 _MTB_RECIPE__OPENOCD_ERASE_EXT_MEM=$(_MTB_RECIPE__OPENOCD_QSPI)
-_MTB_RECIPE__JLINK_ERASE_EXT_MEM:=exec EnableEraseAllFlashBanks
+_MTB_RECIPE__JLINK_ENABLE_EXT_MEM_ERASE:=exec EnableEraseAllFlashBanks
 endif
 
 ifeq ($(_MTB_RECIPE__PROGRAM_INTERFACE_SUBDIR), JLink)
@@ -77,8 +106,14 @@ jlink_generate:
 	$(MTB__NOISE)sed "s|&&PROG_FILE&&|$(_MTB_RECIPE__OPENOCD_PROGRAM_IMG)|g;" $(MTB_TOOLS__RECIPE_DIR)/make/scripts/program.jlink > $(MTB_TOOLS__OUTPUT_CONFIG_DIR)/program.jlink
 	$(MTB__NOISE)sed "s|&&ERASE_OPTION&&|$(_MTB_RECIPE_JLINK_CMDFILE_ERASE)|g;" $(MTB_TOOLS__OUTPUT_CONFIG_DIR)/program.jlink > $(MTB_TOOLS__OUTPUT_CONFIG_DIR)/_program.jlink
 	$(MTB__NOISE)sed "s|&&SECOND_PROG_FILE&&|$(_MTB_RECIPE__OPENOCD_ADDITIONAL_IMG)|g;" $(MTB_TOOLS__OUTPUT_CONFIG_DIR)/_program.jlink > $(MTB_TOOLS__OUTPUT_CONFIG_DIR)/program.jlink
-	$(MTB__NOISE)sed "s|&&EXTERNAL_MEM_ERASE&&|$(_MTB_RECIPE__JLINK_ERASE_EXT_MEM)|g;" $(MTB_TOOLS__RECIPE_DIR)/make/scripts/erase.jlink > $(MTB_TOOLS__OUTPUT_CONFIG_DIR)/erase.jlink
-	$(MTB__NOISE)sed "s|&&EXTERNAL_MEM_ADDRESS_RANGE&&|$(_MTB_RECIPE__JLINK_ERASE_EXT_MEM_RANGE)|g;" $(MTB_TOOLS__OUTPUT_CONFIG_DIR)/erase.jlink > $(MTB_TOOLS__OUTPUT_CONFIG_DIR)/_erase.jlink
+	$(MTB__NOISE)sed "s|&&_MTB_RECIPE__JLINK_ENABLE_EXT_MEM_ERASE&&|$(_MTB_RECIPE__JLINK_ENABLE_EXT_MEM_ERASE)|g;" $(MTB_TOOLS__RECIPE_DIR)/make/scripts/erase.jlink > $(MTB_TOOLS__OUTPUT_CONFIG_DIR)/erase.jlink
+	$(MTB__NOISE)if [ -z "$(_MTB_RECIPE__JLINK_ERASE_EXT_MEM)" ]; then \
+		sed -e 's/&&_MTB_RECIPE__JLINK_ERASE_EXT_MEM&&//' $(MTB_TOOLS__OUTPUT_CONFIG_DIR)/erase.jlink > $(MTB_TOOLS__OUTPUT_CONFIG_DIR)/_erase.jlink; \
+	else \
+		sed -e '/&&_MTB_RECIPE__JLINK_ERASE_EXT_MEM&&/r /dev/stdin' $(MTB_TOOLS__OUTPUT_CONFIG_DIR)/erase.jlink <<< "$(_MTB_RECIPE__JLINK_ERASE_EXT_MEM)" > $(MTB_TOOLS__OUTPUT_CONFIG_DIR)/_erase.jlink; \
+		sed -i -e '/&&_MTB_RECIPE__JLINK_ERASE_EXT_MEM&&/d' $(MTB_TOOLS__OUTPUT_CONFIG_DIR)/_erase.jlink; \
+		sed -i -e 's/|/\n/g' $(MTB_TOOLS__OUTPUT_CONFIG_DIR)/_erase.jlink; \
+	fi
 	$(MTB__NOISE)mv -f $(MTB_TOOLS__OUTPUT_CONFIG_DIR)/_erase.jlink $(MTB_TOOLS__OUTPUT_CONFIG_DIR)/erase.jlink
 
 jlink_path_check:
@@ -91,29 +126,12 @@ ifeq ($(LIBNAME),)
 	fi
 endif
 
-# depends on $(_MTB_CORE__QBUILD_MK_FILE) to locate flash loaders
-erase: $(_MTB_CORE__QBUILD_MK_FILE) erase_$(_MTB_RECIPE__PROGRAM_INTERFACE_SUBDIR)
+erase: erase_$(_MTB_RECIPE__PROGRAM_INTERFACE_SUBDIR)
 
 erase_$(_MTB_RECIPE__PROGRAM_INTERFACE_SUBDIR): debug_interface_check
 	$(MTB__NOISE)echo;\
 	echo "Erasing target device... ";\
 	"$(_MTB_RECIPE__PROGRAM_ERASE_TOOL)" $(_MTB_RECIPE__ERASE_ARGS)
-
-ifeq ($(MTB_CORE__APPLICATION_BOOTSTRAP),true)
-# Multi-core application: pass project-specific program target to the application level
-program_application_bootstrap:
-	$(MTB__NOISE)$(MAKE) -C .. program CY_SECONDSTAGE=
-
-qprogram_application_bootstrap:
-	$(MTB__NOISE)$(MAKE) -C .. qprogram CY_SECONDSTAGE=
-
-program: program_application_bootstrap
-qprogram: qprogram_application_bootstrap
-else
-# Single-core application: program project image directly
-program: program_proj
-qprogram: qprogram_proj
-endif
 
 program_proj: program_$(_MTB_RECIPE__PROGRAM_INTERFACE_SUBDIR)
 
@@ -124,8 +142,7 @@ erase_JLink: jlink_generate
 
 qprogram_proj: qprogram_$(_MTB_RECIPE__PROGRAM_INTERFACE_SUBDIR)
 
-# depends on $(_MTB_CORE__QBUILD_MK_FILE) to locate flash loaders
-program_$(_MTB_RECIPE__PROGRAM_INTERFACE_SUBDIR) qprogram_$(_MTB_RECIPE__PROGRAM_INTERFACE_SUBDIR): $(_MTB_CORE__QBUILD_MK_FILE) debug_interface_check jlink_generate
+program_$(_MTB_RECIPE__PROGRAM_INTERFACE_SUBDIR) qprogram_$(_MTB_RECIPE__PROGRAM_INTERFACE_SUBDIR): debug_interface_check jlink_generate
 ifeq ($(LIBNAME),)
 	$(MTB__NOISE)echo;\
 	"$(_MTB_RECIPE__PROGRAM_ERASE_TOOL)" $(_MTB_RECIPE__PROGRAM_ARGS)
@@ -158,7 +175,7 @@ attach: debug_interface_check
 	$(MTB_TOOLCHAIN_GCC_ARM__GDB) $(_MTB_RECIPE__OPENOCD_SYMBOL_IMG) -x $(_MTB_RECIPE__GDB_ARGS)
 
 
-.PHONY: erase program program_application_bootstrap program_proj
-.PHONY: qprogram qprogram_application_bootstrap qprogram_proj debug qdebug attach
+.PHONY: erase program program_proj
+.PHONY: qprogram qprogram_proj debug qdebug attach
 .PHONY: erase_$(_MTB_RECIPE__PROGRAM_INTERFACE_SUBDIR) jlink_generate program_$(_MTB_RECIPE__PROGRAM_INTERFACE_SUBDIR)
 .PHONY: qprogram_$(_MTB_RECIPE__PROGRAM_INTERFACE_SUBDIR) debug_$(_MTB_RECIPE__PROGRAM_INTERFACE_SUBDIR) qdebug_$(_MTB_RECIPE__PROGRAM_INTERFACE_SUBDIR)
