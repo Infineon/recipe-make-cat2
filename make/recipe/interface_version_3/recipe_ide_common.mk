@@ -6,8 +6,8 @@
 #
 ################################################################################
 # \copyright
-# (c) 2018-2025, Cypress Semiconductor Corporation (an Infineon company) or
-# an affiliate of Cypress Semiconductor Corporation. All rights reserved.
+# Copyright (c) 2018-2026, Infineon Technologies AG, or an affiliate of
+# Infineon Technologies AG. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -87,12 +87,8 @@ _MTB_RECIPE__ECLIPSE_PRJ_PROG_FILE:=$${cy_prj_path}/$(_MTB_RECIPE__IDE_BUILD_PAT
 _MTB_RECIPE__ECLIPSE_APP_PROG_FILE:=$${cy_prj_path}/../$(_MTB_RECIPE__IDE_COMBINED_HEX_RELATIVE)
 
 # JLink path
-ifneq (,$(MTB_JLINK_DIR))
 ifneq (,$(MTB_CORE__JLINK_GDB_EXE))
 _MTB_RECIPE__ECLIPSE_JLINK_EXE:=$(MTB_CORE__JLINK_GDB_EXE)
-else
-_MTB_RECIPE__ECLIPSE_JLINK_EXE:=$${jlink_path}/$${jlink_gdbserver}
-endif
 else
 _MTB_RECIPE__ECLIPSE_JLINK_EXE:=$${jlink_path}/$${jlink_gdbserver}
 endif

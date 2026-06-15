@@ -3,12 +3,12 @@
 #
 # \brief
 # This make file is called recursively and is used to build the
-# resoures file system. It is expected to be run from the example directory.
+# resources file system. It is expected to be run from the example directory.
 #
 ################################################################################
 # \copyright
-# (c) 2018-2025, Cypress Semiconductor Corporation (an Infineon company)
-# or an affiliate of Cypress Semiconductor Corporation. All rights reserved.
+# Copyright (c) 2018-2026, Infineon Technologies AG, or an affiliate of
+# Infineon Technologies AG. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");

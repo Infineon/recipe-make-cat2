@@ -6,8 +6,8 @@
 #
 ################################################################################
 # \copyright
-# (c) 2018-2025, Cypress Semiconductor Corporation (an Infineon company) or
-# an affiliate of Cypress Semiconductor Corporation. All rights reserved.
+# Copyright (c) 2018-2026, Infineon Technologies AG, or an affiliate of
+# Infineon Technologies AG. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -86,6 +86,15 @@ mtb_toolchain_IAR__elf2bin=$(MTB_TOOLCHAIN_IAR__ELF2BIN) -O binary $1 $2
 ################################################################################
 # Options
 ################################################################################
+
+# Force VFP_SELECT=hardfp by default for export to the IAR Embedded Workbench
+ifneq ($(filter ewarm8 ewarm, $(MAKECMDGOALS)),)
+ifeq ($(VFP_SELECT),)
+$(info Note: The VFP_SELECT variable is not set. The default value of VFP_SELECT is hardfp for IAR Embedded Workbench export.)
+VFP_SELECT=hardfp
+MTB_RECIPE__VFP_SELECT_DEFAULT=hardfp
+endif
+endif
 
 # DEBUG/NDEBUG selection
 ifeq ($(CONFIG),Debug)
@@ -186,8 +195,8 @@ ifeq ($(VFP_SELECT),hardfp)
 _MTB_TOOLCHAIN_IAR__VFP_FLAGS:=--fpu FPv5-SP
 _MTB_TOOLCHAIN_IAR__VFP_CFLAGS:=$(_MTB_TOOLCHAIN_IAR__VFP_FLAGS) --aapcs vfp
 else ifeq ($(VFP_SELECT),softfloat)
-# Software FP
-_MTB_TOOLCHAIN_IAR__VFP_FLAGS:=
+# Software FP (compiler), but FPU present for linker compatibility
+_MTB_TOOLCHAIN_IAR__VFP_FLAGS:=--fpu FPv5-SP
 _MTB_TOOLCHAIN_IAR__VFP_CFLAGS:=
 else
 _MTB_TOOLCHAIN_IAR__VFP_FLAGS:=--fpu FPv5-SP
@@ -231,7 +240,7 @@ endif
 endif
 
 # Command line flags for c-files
-MTB_TOOLCHAIN_IAR__CFLAGS:=\
+MTB_TOOLCHAIN_IAR__CFLAGS=\
 	-c\
 	$(_MTB_TOOLCHAIN_IAR__FLAGS_CORE)\
 	$(_MTB_TOOLCHAIN_IAR__OPTIMIZATION)\
@@ -248,14 +257,14 @@ MTB_TOOLCHAIN_IAR__CFLAGS+=--debug
 endif
 
 # Command line flags for cpp-files
-MTB_TOOLCHAIN_IAR__CXXFLAGS:=\
+MTB_TOOLCHAIN_IAR__CXXFLAGS=\
 	$(MTB_TOOLCHAIN_IAR__CFLAGS)\
 	--c++\
 	--no_rtti\
 	--no_exceptions
 
 # Command line flags for s-files
-MTB_TOOLCHAIN_IAR__ASFLAGS:=\
+MTB_TOOLCHAIN_IAR__ASFLAGS=\
 	-c\
 	$(_MTB_TOOLCHAIN_IAR__FLAGS_CORE)\
 	$(_MTB_TOOLCHAIN_IAR__VFP_FLAGS)\
@@ -265,22 +274,20 @@ MTB_TOOLCHAIN_IAR__ASFLAGS:=\
 	-r
 
 # Command line flags for linking
-TB_TOOLCHAIN_IAR__LDFLAGS:=\
+MTB_TOOLCHAIN_IAR__LDFLAGS=\
 	$(_MTB_TOOLCHAIN_IAR__FLAGS_CORE)\
 	$(_MTB_TOOLCHAIN_IAR__VFP_FLAGS)\
 	$(_MTB_TOOLCHAIN_IAR__SILENT_CFLAGS)\
 	--manual_dynamic_initialization
 
 # Command line flags for archiving
-MTB_TOOLCHAIN_IAR__ARFLAGS:=--create
+MTB_TOOLCHAIN_IAR__ARFLAGS=--create
 
 # Enable Multi-Threaded build arguments
 # Note: If these RTOS-specific flags are modified, the instructions in ide.mk should be updated to reflect the changes.
-ifneq (,$(filter MW_ABSTRACTION_RTOS,$(COMPONENTS)))
-MTB_TOOLCHAIN_IAR__CFLAGS  +=--dlib_config=full
-MTB_TOOLCHAIN_IAR__CXXFLAGS+=--dlib_config=full
-MTB_TOOLCHAIN_IAR__LDFLAGS +=--threaded_lib
-endif
+MTB_TOOLCHAIN_IAR__CFLAGS+=$(if $(filter MW_ABSTRACTION_RTOS,$(filter-out $(DISABLE_COMPONENTS),$(MTB_CORE__FULL_COMPONENT_LIST))),--dlib_config=full,)
+MTB_TOOLCHAIN_IAR__CXXFLAGS+=$(if $(filter MW_ABSTRACTION_RTOS,$(filter-out $(DISABLE_COMPONENTS),$(MTB_CORE__FULL_COMPONENT_LIST))),--dlib_config=full,)
+MTB_TOOLCHAIN_IAR__LDFLAGS+=$(if $(filter MW_ABSTRACTION_RTOS,$(filter-out $(DISABLE_COMPONENTS),$(MTB_CORE__FULL_COMPONENT_LIST))),--threaded_lib,)
 
 # Toolchain-specific suffixes
 MTB_TOOLCHAIN_IAR__SUFFIX_S  :=S
@@ -304,9 +311,9 @@ MTB_TOOLCHAIN_IAR__OUTPUT_OPTION:=-o
 MTB_TOOLCHAIN_IAR__ARCHIVE_LIB_OUTPUT_OPTION:=-o
 MTB_TOOLCHAIN_IAR__MAPFILE:=--map=
 MTB_TOOLCHAIN_IAR__LSFLAGS:=--config=
-MTB_TOOLCHAIN_IAR__INCRSPFILE:=-f 
-MTB_TOOLCHAIN_IAR__INCRSPFILE_ASM:=-f 
-MTB_TOOLCHAIN_IAR__OBJRSPFILE:=-f 
+MTB_TOOLCHAIN_IAR__INCRSPFILE:=-f$(MTB__SPACE)
+MTB_TOOLCHAIN_IAR__INCRSPFILE_ASM:=-f$(MTB__SPACE)
+MTB_TOOLCHAIN_IAR__OBJRSPFILE:=-f$(MTB__SPACE)
 
 # Produce a makefile dependency rule for each input file
 MTB_TOOLCHAIN_IAR__DEPENDENCIES=--dependencies=m "$(@:.$(MTB_TOOLCHAIN_IAR__SUFFIX_O)=.$(MTB_TOOLCHAIN_IAR__SUFFIX_D))"

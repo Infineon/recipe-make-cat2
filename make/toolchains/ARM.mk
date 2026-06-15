@@ -6,8 +6,8 @@
 #
 ################################################################################
 # \copyright
-# (c) 2018-2025, Cypress Semiconductor Corporation (an Infineon company) or
-# an affiliate of Cypress Semiconductor Corporation. All rights reserved.
+# Copyright (c) 2018-2026, Infineon Technologies AG, or an affiliate of
+# Infineon Technologies AG. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -120,14 +120,17 @@ ifeq ($(VFP_SELECT),hardfp)
 # FPv4 FPU, hardfp, single-precision
 _MTB_TOOLCHAIN_ARM__VFP_CFLAGS:=-mfloat-abi=hard -mfpu=fpv4-sp-d16
 _MTB_TOOLCHAIN_ARM__VFP_FLAGS:=--fpu=FPv4-SP
+_MTB_RECIPE_CMSIS__DFPU:=SP_FPU
 else ifeq ($(VFP_SELECT),softfloat)
 # Software FP
 _MTB_TOOLCHAIN_ARM__VFP_CFLAGS:=
 _MTB_TOOLCHAIN_ARM__VFP_FLAGS:=
+_MTB_RECIPE_CMSIS__DFPU:=NO_FPU
 else
 # FPv4 FPU, softfp, single-precision
 _MTB_TOOLCHAIN_ARM__VFP_CFLAGS:=-mfloat-abi=softfp -mfpu=fpv4-sp-d16
 _MTB_TOOLCHAIN_ARM__VFP_FLAGS:=--fpu=SoftVFP+FPv4-SP
+_MTB_RECIPE_CMSIS__DFPU:=SP_FPU
 endif
 endif
 
@@ -140,24 +143,29 @@ ifeq ($(VFP_SELECT_PRECISION),singlefp)
 # FPv5 FPU, hardfp, single-precision
 _MTB_TOOLCHAIN_ARM__VFP_CFLAGS:=-mfloat-abi=hard -mfpu=fpv5-sp-d16
 _MTB_TOOLCHAIN_ARM__VFP_FLAGS:=--fpu=FPv5-SP
+_MTB_RECIPE_CMSIS__DFPU:=SP_FPU
 else
 # FPv5 FPU, hardfp, double-precision
 _MTB_TOOLCHAIN_ARM__VFP_CFLAGS:=-mfloat-abi=hard -mfpu=fpv5-d16
 _MTB_TOOLCHAIN_ARM__VFP_FLAGS:=--fpu=FPv5_D16
+_MTB_RECIPE_CMSIS__DFPU:=DP_FPU
 endif
 else ifeq ($(VFP_SELECT),softfloat)
 # Software FP
 _MTB_TOOLCHAIN_ARM__VFP_CFLAGS:=-mfloat-abi=soft
 _MTB_TOOLCHAIN_ARM__VFP_FLAGS:=--fpu=SoftVFP
+_MTB_RECIPE_CMSIS__DFPU:=NO_FPU
 else
 ifeq ($(VFP_SELECT_PRECISION),singlefp)
 # FPv5 FPU, softfp, single-precision
 _MTB_TOOLCHAIN_ARM__VFP_CFLAGS:=-mfloat-abi=softfp -mfpu=fpv5-sp-d16
 _MTB_TOOLCHAIN_ARM__VFP_FLAGS:=--fpu=SoftVFP+FPv5-SP
+_MTB_RECIPE_CMSIS__DFPU:=SP_FPU
 else
 # FPv5 FPU, softfp, double-precision
 _MTB_TOOLCHAIN_ARM__VFP_CFLAGS:=-mfloat-abi=softfp -mfpu=fpv5-d16
 _MTB_TOOLCHAIN_ARM__VFP_FLAGS:=--fpu=SoftVFP+FPv5_D16
+_MTB_RECIPE_CMSIS__DFPU:=DP_FPU
 endif
 endif
 endif
@@ -177,22 +185,26 @@ ifeq ($(filter $(MTB_RECIPE__CORE_NAME)_FPU_PRESENT,$(DEVICE_$(DEVICE)_FEATURES)
 # Software FP
 _MTB_TOOLCHAIN_ARM__VFP_CFLAGS:=-mfloat-abi=soft
 _MTB_TOOLCHAIN_ARM__VFP_FLAGS:=--fpu=SoftVFP
+_MTB_RECIPE_CMSIS__DFPU:=NO_FPU
 else
 ifeq ($(VFP_SELECT),hardfp)
 # FPv5 FPU, hardfp, single-precision only
 _MTB_TOOLCHAIN_ARM__VFP_CFLAGS:=-mfloat-abi=hard -mfpu=fpv5-sp-d16
 _MTB_TOOLCHAIN_ARM__VFP_FLAGS:=--fpu=FPv5-SP
+_MTB_RECIPE_CMSIS__DFPU:=SP_FPU
 else ifeq ($(VFP_SELECT),softfloat)
 # Software FP
 _MTB_TOOLCHAIN_ARM__VFP_CFLAGS:=-mfloat-abi=soft
-_MTB_TOOLCHAIN_ARM__VFP_FLAGS:=--fpu=SoftVFP
+_MTB_TOOLCHAIN_ARM__VFP_FLAGS:=--fpu=SoftVFP+FPv5-SP
+_MTB_RECIPE_CMSIS__DFPU:=NO_FPU
 else
 # FPv5 FPU, softfp, single-precision only
 _MTB_TOOLCHAIN_ARM__VFP_CFLAGS:=-mfloat-abi=softfp -mfpu=fpv5-sp-d16
 _MTB_TOOLCHAIN_ARM__VFP_FLAGS:=--fpu=SoftVFP+FPv5-SP
-endif
-endif
-endif
+_MTB_RECIPE_CMSIS__DFPU:=SP_FPU
+endif # ifeq ($(VFP_SELECT),hardfp)
+endif # ifeq ($(filter $(MTB_RECIPE__CORE_NAME)_FPU_PRESENT,$(DEVICE_$(DEVICE)_FEATURES)),)
+endif # ifeq ($(MTB_RECIPE__CORE),CM33)
 
 ifeq ($(MTB_RECIPE__CORE),CM55)
 # Check if MVE is supported
@@ -205,20 +217,26 @@ ifeq ($(MVE_SELECT),NO_MVE)
 # Disable MVE
 _MTB_TOOLCHAIN_ARM__MVE_CFLAGS=+nomve
 _MTB_TOOLCHAIN_ARM__MVE_FLAGS=.no_mve
+_MTB_RECIPE_CMSIS__DMVE:=NO_MVE
 else ifeq ($(MVE_SELECT),MVE-I)
 ifeq ($(filter $(MTB_RECIPE__CORE_NAME)_FPU_PRESENT,$(DEVICE_$(DEVICE)_FEATURES)),)
 # Force switch to softfloat mode if FPU is not available
 _MTB_TOOLCHAIN_ARM__MVE_CFLAGS=+nofp
 _MTB_TOOLCHAIN_ARM__MVE_FLAGS=.no_fp
+_MTB_RECIPE_CMSIS__DMVE:=MVE
+_MTB_RECIPE_CMSIS__DFPU:=NO_FPU
 else
 ifeq ($(VFP_SELECT),softfloat)
 # Enable MVE-I and disable FPU
 _MTB_TOOLCHAIN_ARM__MVE_CFLAGS=+nofp
 _MTB_TOOLCHAIN_ARM__MVE_FLAGS=.no_fp
+_MTB_RECIPE_CMSIS__DMVE:=MVE
+_MTB_RECIPE_CMSIS__DFPU:=NO_FPU
 else
 # Integer precision MVE
 _MTB_TOOLCHAIN_ARM__MVE_CFLAGS=+nomve.fp
 _MTB_TOOLCHAIN_ARM__MVE_FLAGS=.no_mvefp
+_MTB_RECIPE_CMSIS__DMVE:=MVE
 endif
 endif
 else
@@ -230,6 +248,7 @@ endif
 # Integer, half-, and single-precision floating-point MVE
 _MTB_TOOLCHAIN_ARM__MVE_CFLAGS=
 _MTB_TOOLCHAIN_ARM__MVE_FLAGS=
+_MTB_RECIPE_CMSIS__DMVE:=FP_MVE
 endif
 # Arm Cortex-M55 CPU + extensions
 _MTB_TOOLCHAIN_ARM__CFLAGS_CORE:=-mcpu=cortex-m55$(_MTB_TOOLCHAIN_ARM__MVE_CFLAGS)
@@ -243,35 +262,48 @@ else
 _MTB_TOOLCHAIN_ARM__VFP_CFLAGS:=-mfloat-abi=soft
 _MTB_TOOLCHAIN_ARM__VFP_FLAGS:=--fpu=SoftVFP
 endif
+_MTB_RECIPE_CMSIS__DFPU:=NO_FPU
 else
 ifeq ($(VFP_SELECT),softfp)
 ifeq ($(VFP_SELECT_PRECISION),singlefp)
 # FPv5 FPU, softfp, single-precision
 _MTB_TOOLCHAIN_ARM__VFP_CFLAGS:=-mfloat-abi=softfp -mfpu=fpv5-sp-d16
 _MTB_TOOLCHAIN_ARM__VFP_FLAGS:=--fpu=SoftVFP+FPv5-SP
+_MTB_RECIPE_CMSIS__DFPU:=SP_FPU
 else
 # FPv5 FPU, softfp, double-precision
 _MTB_TOOLCHAIN_ARM__VFP_CFLAGS:=-mfloat-abi=softfp
 _MTB_TOOLCHAIN_ARM__VFP_FLAGS:=--fpu=SoftVFP+FPv5_D16
+_MTB_RECIPE_CMSIS__DFPU:=DP_FPU
 endif
 else ifeq ($(VFP_SELECT),softfloat)
 # Software FP
+_MTB_RECIPE_CMSIS__DFPU:=NO_FPU
 ifeq ($(MVE_SELECT),MVE-I)
 _MTB_TOOLCHAIN_ARM__VFP_CFLAGS:=
 _MTB_TOOLCHAIN_ARM__VFP_FLAGS=
 else
+# ARM CM55 need to have same precision flags for softfp and softfloat.
+# Otherwise, it generates an incompactiblity error.
+ifeq ($(VFP_SELECT_PRECISION),singlefp)
 _MTB_TOOLCHAIN_ARM__VFP_CFLAGS:=-mfloat-abi=soft
-_MTB_TOOLCHAIN_ARM__VFP_FLAGS:=--fpu=SoftVFP
-endif
+_MTB_TOOLCHAIN_ARM__VFP_FLAGS:=--fpu=SoftVFP+FPv5-SP
+else
+_MTB_TOOLCHAIN_ARM__VFP_CFLAGS:=-mfloat-abi=soft -mfpu=fpv5-sp-d16
+_MTB_TOOLCHAIN_ARM__VFP_FLAGS:=--fpu=SoftVFP+FPv5_D16
+endif # ifeq ($(MVE_SELECT),MVE-I)
+endif # ifeq ($(VFP_SELECT),softfloat)
 else
 ifeq ($(VFP_SELECT_PRECISION),singlefp)
 # FPv5 FPU, hardfp, single-precision
 _MTB_TOOLCHAIN_ARM__VFP_CFLAGS:=-mfloat-abi=hard -mfpu=fpv5-sp-d16
 _MTB_TOOLCHAIN_ARM__VFP_FLAGS:=--fpu=FPv5-SP
+_MTB_RECIPE_CMSIS__DFPU:=SP_FPU
 else
 # FPv5 FPU, hardfp, double-precision
 _MTB_TOOLCHAIN_ARM__VFP_CFLAGS:=-mfloat-abi=hard
 _MTB_TOOLCHAIN_ARM__VFP_FLAGS:=--fpu=FPv5_D16
+_MTB_RECIPE_CMSIS__DFPU:=DP_FPU
 endif
 endif
 endif
@@ -310,7 +342,8 @@ MTB_TOOLCHAIN_ARM__LDFLAGS:=\
 	$(_MTB_TOOLCHAIN_ARM__FLAGS_CORE)\
 	$(_MTB_TOOLCHAIN_ARM__VFP_FLAGS)\
 	--info=totals\
-	--stdlib=libc++
+	--stdlib=libc++\
+	--dangling_debug_address=0xF0000000
 
 # Command line flags for archiving
 MTB_TOOLCHAIN_ARM__ARFLAGS:=-s --create
@@ -336,12 +369,12 @@ MTB_TOOLCHAIN_ARM__SUFFIX_PROGRAM:=hex
 # Toolchain specific flags
 MTB_TOOLCHAIN_ARM__OUTPUT_OPTION:=-o
 MTB_TOOLCHAIN_ARM__ARCHIVE_LIB_OUTPUT_OPTION:=
-MTB_TOOLCHAIN_ARM__MAPFILE:=--map --list 
-MTB_TOOLCHAIN_ARM__LSFLAGS:=--scatter 
+MTB_TOOLCHAIN_ARM__MAPFILE:=--map --list$(MTB__SPACE)
+MTB_TOOLCHAIN_ARM__LSFLAGS:=--scatter$(MTB__SPACE)
 MTB_TOOLCHAIN_ARM__INCRSPFILE:=@
 MTB_TOOLCHAIN_ARM__INCRSPFILE_ASM_UC:=@
-MTB_TOOLCHAIN_ARM__INCRSPFILE_ASM_LC:=--via 
-MTB_TOOLCHAIN_ARM__OBJRSPFILE:=--via 
+MTB_TOOLCHAIN_ARM__INCRSPFILE_ASM_LC:=--via$(MTB__SPACE)
+MTB_TOOLCHAIN_ARM__OBJRSPFILE:=--via$(MTB__SPACE)
 
 # Produce a makefile dependency rule for each input file
 MTB_TOOLCHAIN_ARM__DEPENDENCIES=-MMD -MP -MF "$(@:.$(MTB_TOOLCHAIN_ARM__SUFFIX_O)=.$(MTB_TOOLCHAIN_ARM__SUFFIX_D))" -MT "$@"

@@ -6,8 +6,8 @@
 #
 ################################################################################
 # \copyright
-# (c) 2018-2025, Cypress Semiconductor Corporation (an Infineon company) or
-# an affiliate of Cypress Semiconductor Corporation. All rights reserved.
+# Copyright (c) 2018-2026, Infineon Technologies AG, or an affiliate of
+# Infineon Technologies AG. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -58,8 +58,14 @@ _MTB_RECIPE__OPENOCD_QSPI_CFG_PATH_APPLICATION:=$(patsubst $(call mtb_path_norma
 
 _MTB_RECIPE__OPENOCD_SCRIPTS=-s $(CY_TOOL_openocd_scripts_SCRIPT_ABS)
 
+ifneq ($(MTB_PROBE_FREQUENCY_KHZ),)
+_MTB_RECIPE__OPENOCD_PROBE_FREQUENCY:=adapter speed $(MTB_PROBE_FREQUENCY_KHZ);
+endif
+
 _MTB_RECIPE__OPENOCD_INTERFACE=source [find interface/kitprog3.cfg];
-_MTB_RECIPE__OPENOCD_TARGET=source [find target/$(_MTB_RECIPE__OPENOCD_DEVICE_CFG)];
+_MTB_RECIPE__OPENOCD_TARGET_SOURCE=source [find target/$(_MTB_RECIPE__OPENOCD_DEVICE_CFG)];
+
+_MTB_RECIPE__OPENOCD_TARGET=$(_MTB_RECIPE__OPENOCD_TARGET_SOURCE)$(_MTB_RECIPE__OPENOCD_PROBE_FREQUENCY)
 ifeq ($(_MTB_RECIPE__OPENOCD_QSPI_CFG_PATH),)
 _MTB_RECIPE__OPENOCD_QSPI=
 else ifneq ($(_MTB_RECIPE__NO_QSPI),)
@@ -128,9 +134,10 @@ endif
 
 erase: erase_$(_MTB_RECIPE__PROGRAM_INTERFACE_SUBDIR)
 
+_MTB_RECIPE__ERASING_TARGET_MSG?="Erasing target device..."
 erase_$(_MTB_RECIPE__PROGRAM_INTERFACE_SUBDIR): debug_interface_check
 	$(MTB__NOISE)echo;\
-	echo "Erasing target device... ";\
+	echo $(_MTB_RECIPE__ERASING_TARGET_MSG);\
 	"$(_MTB_RECIPE__PROGRAM_ERASE_TOOL)" $(_MTB_RECIPE__ERASE_ARGS)
 
 program_proj: program_$(_MTB_RECIPE__PROGRAM_INTERFACE_SUBDIR)
@@ -174,8 +181,51 @@ attach: debug_interface_check
 	echo "Starting GDB Client... ";\
 	$(MTB_TOOLCHAIN_GCC_ARM__GDB) $(_MTB_RECIPE__OPENOCD_SYMBOL_IMG) -x $(_MTB_RECIPE__GDB_ARGS)
 
+################################################################################
+# Advanced KitProg3 Programming (mtb-programmer)
+################################################################################
+
+# 1) Default: project hex file (includes _MTB_RECIPE__PROG_FILE_SUFFIX for recipes
+#    that post-process into a .final.hex, e.g. CYW20829)
+_MTB_RECIPE__ADVANCED_PROGRAM_HEX_FILE:=$(MTB_RECIPE__LAST_CONFIG_DIR)/$(APPNAME)$(_MTB_RECIPE__PROG_FILE_SUFFIX).$(MTB_RECIPE__SUFFIX_PROGRAM)
+
+# 2) Override with combiner-signer hex if available
+_MTB_RECIPE__ADVANCED_PROGRAM_CS_IDX:=$(lastword $(MTB_COMBINE_SIGN_$(notdir $(realpath $(MTB_TOOLS__PRJ_DIR)))_HEX_FILES))
+ifneq ($(MTB_COMBINE_SIGN_$(_MTB_RECIPE__ADVANCED_PROGRAM_CS_IDX)_HEX_PATH),)
+_MTB_RECIPE__ADVANCED_PROGRAM_HEX_FILE:=$(MTB_COMBINE_SIGN_$(_MTB_RECIPE__ADVANCED_PROGRAM_CS_IDX)_HEX_PATH)
+endif
+
+# 3) Multi-core application programming: always use combined HEX image
+ifneq ($(_MTB_RECIPE__APP_HEX_FILE),)
+_MTB_RECIPE__ADVANCED_PROGRAM_HEX_FILE:=$(_MTB_RECIPE__APP_HEX_FILE)
+endif
+
+# 4) Use custom HEX image when PROG_FILE was provided by the user
+ifneq ($(PROG_FILE),)
+_MTB_RECIPE__ADVANCED_PROGRAM_HEX_FILE:=$(PROG_FILE)
+endif
+
+advanced_program:
+ifneq (KitProg3,$(_MTB_RECIPE__PROGRAM_INTERFACE_SUBDIR))
+	$(error The advanced_program target requires the KitProg3 interface. \
+	Current interface is "$(_MTB_RECIPE__PROGRAM_INTERFACE_SUBDIR)". \
+	Set BSP_PROGRAM_INTERFACE=KitProg3 or use the "program" target instead)
+endif
+ifeq ($(LIBNAME),)
+	$(MTB__NOISE)echo;\
+	echo "Programming target device with mtb-programmer...";\
+	"$(CY_TOOL_mtb-programmer_EXE_ABS)" \
+		--serial "$(MTB_PROBE_SERIAL)" \
+		--hexfile "$(call mtb__path_normalize,$(_MTB_RECIPE__ADVANCED_PROGRAM_HEX_FILE))" \
+		--mpn $(DEVICE) \
+		$(_MTB_RECIPE__ADVANCED_PROGRAM_EXTRA_ARGS) \
+		$(MTB__JOB_BACKGROUND)
+else
+	$(MTB__NOISE)echo "Library application detected. Skip programming... ";\
+	echo
+endif
 
 .PHONY: erase program program_proj
-.PHONY: qprogram qprogram_proj debug qdebug attach
+.PHONY: qprogram qprogram_proj debug qdebug attach advanced_program
 .PHONY: erase_$(_MTB_RECIPE__PROGRAM_INTERFACE_SUBDIR) jlink_generate program_$(_MTB_RECIPE__PROGRAM_INTERFACE_SUBDIR)
 .PHONY: qprogram_$(_MTB_RECIPE__PROGRAM_INTERFACE_SUBDIR) debug_$(_MTB_RECIPE__PROGRAM_INTERFACE_SUBDIR) qdebug_$(_MTB_RECIPE__PROGRAM_INTERFACE_SUBDIR)

@@ -5,6 +5,7 @@
             "cwd": "${workspaceFolder}",
             "executable": "&&_MTB_RECIPE__ELF_FILE&&",
             "servertype": "jlink",
+            "debuggerArgs": ["-l", "30"],
             "device": "&&DEVICE&&",
             "interface": "&&_MTB_RECIPE__PROBE_INTERFACE&&",
             "serialNumber": "&&_MTB_RECIPE__PROBE_SERIAL&&",
@@ -21,5 +22,8 @@
             "runToEntryPoint": "main",    // Specifies application entry point name where program will halt
             "preLaunchTask": "Build", // Set this to run a task from tasks.json before
                                                      // starting a debug session
-            "showDevDebugOutput": "none"
-        },
+            "showDevDebugOutput": "none",
+            "liveWatch": {
+                "enabled": true
+            }
+        }

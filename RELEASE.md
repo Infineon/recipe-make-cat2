@@ -13,9 +13,14 @@ This release of the PSOC™ 4 GNU make build recipe includes complete support fo
     * GCC
     * IAR
     * ARM Compiler 6
-    * LLVM Embedded Toolchain for Arm (Experimental)
+    * LLVM Embedded Toolchain for Arm
 
 ### What Changed?
+#### v2.6.0
+* Added Advanced KitProg3 programming Eclipse launch configuration / VS Code task, allowing to launch ModusToolbox™ Programmer
+* Added new memory reporting functionality
+* Disabled auto-build for the Eclipse Attach launch configurations
+
 #### v2.5.0
 * Moved CFLAGS, CXXFLAGS, ASFLAGS, LDFLAGS variables to be added after default flags. In case of conflict, most toolchains select the last flags as the option. This allows those variables to overwrite the default flags.
 * Added support for GNU assembly syntax when using ARM toolchain.
@@ -76,10 +81,10 @@ This version of the PSOC™ 4 build system was validated for compatibility with 
 
 | Software and Tools                        | Version |
 | :---                                      | :----:  |
-| ModusToolbox Software Environment         | 3.5     |
-| GCC Compiler                              | 11.3    |
-| IAR Compiler                              | 9.3     |
-| ARM Compiler                              | 6.16    |
+| ModusToolbox Software Environment         | 3.8     |
+| GCC Compiler                              | 14.2.1  |
+| IAR Compiler                              | 9.70.1  |
+| ARM Compiler                              | 6.22    |
 
 Minimum required ModusToolbox Software Environment: v3.4
 
@@ -88,4 +93,4 @@ Minimum required ModusToolbox Software Environment: v3.4
 * [ModusToolbox](https://www.infineon.com/cms/en/design-support/tools/sdk/modustoolbox-software)
 
 ---
-(c) 2019-2025, Cypress Semiconductor Corporation (an Infineon company) or an affiliate of Cypress Semiconductor Corporation. All rights reserved.
+Copyright (c) 2019-2026, Infineon Technologies AG, or an affiliate of Infineon Technologies AG. All rights reserved.
