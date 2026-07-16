@@ -16,6 +16,9 @@ This release of the PSOC™ 4 GNU make build recipe includes complete support fo
     * LLVM Embedded Toolchain for Arm
 
 ### What Changed?
+#### v2.6.1
+* Fixed IAR Embedded Workbench export incorrectly selecting hardfp libraries for cores without FPU.
+
 #### v2.6.0
 * Added Advanced KitProg3 programming Eclipse launch configuration / VS Code task, allowing to launch ModusToolbox™ Programmer
 * Added new memory reporting functionality

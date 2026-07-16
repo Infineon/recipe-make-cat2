@@ -90,9 +90,11 @@ mtb_toolchain_IAR__elf2bin=$(MTB_TOOLCHAIN_IAR__ELF2BIN) -O binary $1 $2
 # Force VFP_SELECT=hardfp by default for export to the IAR Embedded Workbench
 ifneq ($(filter ewarm8 ewarm, $(MAKECMDGOALS)),)
 ifeq ($(VFP_SELECT),)
+ifneq ($(or $(filter CM4 CM7,$(MTB_RECIPE__CORE)),$(filter $(MTB_RECIPE__CORE_NAME)_FPU_PRESENT,$(DEVICE_$(DEVICE)_FEATURES))),)
 $(info Note: The VFP_SELECT variable is not set. The default value of VFP_SELECT is hardfp for IAR Embedded Workbench export.)
 VFP_SELECT=hardfp
 MTB_RECIPE__VFP_SELECT_DEFAULT=hardfp
+endif
 endif
 endif
 
